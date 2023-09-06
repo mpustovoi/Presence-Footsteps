@@ -467,6 +467,8 @@
 	"minecraft:tripwire": "NOT_EMITTER",
 	"minecraft:emerald_block": "composite",
 
+	"minecraft:crimson_stairs": "wood,mushroom",
+	"minecraft:warped_stairs": "wood,mushroom",
 	"#minecraft:wooden_stairs": "wood",
 
 	"minecraft:beacon": "glass",
