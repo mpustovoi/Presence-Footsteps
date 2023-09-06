@@ -210,7 +210,9 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
             solver.playAssociation(ply, solver.findAssociation(ply.getWorld(), ply.getBlockPos().down(), Solver.MESSY_FOLIAGE_STRATEGY), event);
         } else {
-            solver.playAssociation(ply, solver.findAssociation(ply, verticalOffsetAsMinus, isRightFoot), event);
+            if (!ply.isSneaky() || event.isExtraLoud()) {
+                solver.playAssociation(ply, solver.findAssociation(ply, verticalOffsetAsMinus, isRightFoot), event);
+            }
             isRightFoot = !isRightFoot;
         }
 

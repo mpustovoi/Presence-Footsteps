@@ -76,4 +76,8 @@ public enum State {
     public State getTransitionDestination() {
         return destination;
     }
+
+    public boolean isExtraLoud() {
+        return this == RUN || this == JUMP || destination == RUN;
+    }
 }
