@@ -260,15 +260,7 @@ public record StateLookup(Map<String, Bucket> substrates) implements Lookup<Bloc
 
         @Override
         public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + (empty ? 1231 : 1237);
-            result = prime * result + ((identifier == null) ? 0 : identifier.hashCode());
-            result = prime * result + (isTag ? 1231 : 1237);
-            result = prime * result + (isWildcard ? 1231 : 1237);
-            result = prime * result + ((properties == null) ? 0 : properties.hashCode());
-            result = prime * result + ((substrate == null) ? 0 : substrate.hashCode());
-            return result;
+            return Objects.hash(empty, identifier, isTag, isWildcard, properties, substrate);
         }
 
         @Override
@@ -277,7 +269,9 @@ public record StateLookup(Map<String, Bucket> substrates) implements Lookup<Bloc
         }
 
         private boolean equals(Key other) {
-            return isTag == other.isTag && isWildcard == other.isWildcard && empty == other.empty
+            return isTag == other.isTag
+                    && isWildcard == other.isWildcard
+                    && empty == other.empty
                     && Objects.equals(identifier, other.identifier)
                     && Objects.equals(substrate, other.substrate)
                     && Objects.equals(properties, other.properties);
