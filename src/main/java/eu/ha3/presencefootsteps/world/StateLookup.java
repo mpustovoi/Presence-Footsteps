@@ -140,7 +140,7 @@ public record StateLookup(Map<String, Bucket> substrates) implements Lookup<Bloc
     private record KeyList(Set<Key> priorityKeys, Set<Key> keys) {
 
         public KeyList() {
-            this(new ObjectOpenHashSet<>(), new ObjectOpenHashSet<>());
+            this(new ObjectLinkedOpenHashSet<>(), new ObjectLinkedOpenHashSet<>());
         }
 
         void add(Key key) {
