@@ -36,18 +36,22 @@ public class PFSolver implements Solver {
     }
 
     @Override
-    public void playAssociation(LivingEntity ply, Association assos, State eventType) {
-        if (assos.isNotEmitter()) {
-            return;
+    public boolean playAssociation(LivingEntity ply, Association assos, State eventType) {
+        if (!assos.isResult()) {
+            return false;
         }
 
-        assos = assos.at(ply);
+        if (!assos.isNotEmitter()) {
+            assos = assos.at(ply);
 
-        if (assos.hasAssociation()) {
-            isolator.getAcoustics().playAcoustic(assos, eventType, Options.EMPTY);
-        } else {
-            isolator.getStepPlayer().playStep(assos);
+            if (assos.hasAssociation()) {
+                isolator.getAcoustics().playAcoustic(assos, eventType, Options.EMPTY);
+            } else {
+                isolator.getStepPlayer().playStep(assos);
+            }
         }
+
+        return true;
     }
 
     @Override

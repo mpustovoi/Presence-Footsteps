@@ -23,4 +23,9 @@ public interface StepSoundGenerator {
      * Sets this engine to use the parameters from a new isolator.
      */
     void setIsolator(Isolator isolator);
+
+    /**
+     * Checks whether the sound engine is engaged and doing something.
+     */
+    boolean isInactive();
 }

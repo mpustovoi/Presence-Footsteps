@@ -112,6 +112,8 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
                         generator.setIsolator(isolator);
                         if (generator.generateFootsteps((LivingEntity)e)) {
                             ((IEntity) e).setNextStepDistance(Integer.MAX_VALUE);
+                        } else if (((IEntity) e).getNextStepDistance() == Integer.MAX_VALUE) {
+                            ((IEntity) e).setNextStepDistance(e.distanceTraveled + 1);
                         }
                     });
                 } catch (Throwable t) {
@@ -146,10 +148,10 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
                        return true;
                    }
 
-                   String[] name = sound.getId().getPath().split("\\.");
-                   return name.length > 0
-                           && "block".contentEquals(name[0])
-                           && "step".contentEquals(name[name.length - 1]);
+                   //String[] name = sound.getId().getPath().split("\\.");
+                   return false;//name.length > 0
+                          // && "block".contentEquals(name[0])
+                          // && "step".contentEquals(name[name.length - 1]);
         }).isPresent();
     }
 

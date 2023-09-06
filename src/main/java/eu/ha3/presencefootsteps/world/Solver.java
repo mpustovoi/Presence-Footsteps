@@ -27,7 +27,7 @@ public interface Solver {
     /**
      * Play an association.
      */
-    void playAssociation(LivingEntity ply, Association assos, State eventType);
+    boolean playAssociation(LivingEntity ply, Association assos, State eventType);
 
     /**
      * Find an association for a player particular foot. This will fetch the player

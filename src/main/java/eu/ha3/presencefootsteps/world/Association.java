@@ -67,7 +67,12 @@ public final class Association {
     }
 
     public boolean hasAssociation() {
-        return !isNotEmitter() && (Emitter.isResult(data) || Emitter.isResult(wetData));
+        return !isNotEmitter() && isResult();
+    }
+
+
+    public boolean isResult() {
+        return Emitter.isResult(data) || Emitter.isResult(wetData);
     }
 
     public String getAcousticName() {

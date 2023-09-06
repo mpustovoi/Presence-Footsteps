@@ -53,8 +53,18 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
     private final Modifier<TerrestrialStepSoundGenerator> modifier;
 
+    private boolean playedSound;
+
+    private int ticksInactive;
+
+
     public TerrestrialStepSoundGenerator(Modifier<TerrestrialStepSoundGenerator> modifier) {
         this.modifier = modifier;
+    }
+
+    @Override
+    public boolean isInactive() {
+        return ticksInactive > 23;
     }
 
     @Override
@@ -72,11 +82,17 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     @Override
     public boolean generateFootsteps(LivingEntity ply) {
         motionTracker.simulateMotionData(ply);
+        playedSound = motionTracker.isStationary();
         simulateFootsteps(ply);
         simulateAirborne(ply);
         simulateBrushes(ply);
         simulateStationary(ply);
-        return true;
+        if (!playedSound) {
+            ticksInactive++;
+        } else {
+            ticksInactive = 0;
+        }
+        return !isInactive();
     }
 
     protected void simulateStationary(LivingEntity ply) {
@@ -84,7 +100,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             Association assos = solver.findAssociation(ply, 0d, isRightFoot);
 
             if (assos.hasAssociation() || !isImmobile) {
-                solver.playAssociation(ply, assos, State.STAND);
+                playedSound |= solver.playAssociation(ply, assos, State.STAND);
             }
         }
     }
@@ -132,7 +148,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             scalStat = !scalStat;
 
             if (scalStat && variator.PLAY_WANDER && !hasStoppingConditions(ply)) {
-                solver.playAssociation(ply, solver.findAssociation(ply, 0, isRightFoot), State.WANDER);
+                playedSound |= solver.playAssociation(ply, solver.findAssociation(ply, 0, isRightFoot), State.WANDER);
             }
         }
         xMovec = movX;
@@ -208,10 +224,10 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
             acoustics.playAcoustic(ply, "_SWIM", state, options);
 
-            solver.playAssociation(ply, solver.findAssociation(ply.getWorld(), ply.getBlockPos().down(), Solver.MESSY_FOLIAGE_STRATEGY), event);
+            playedSound |= solver.playAssociation(ply, solver.findAssociation(ply.getWorld(), ply.getBlockPos().down(), Solver.MESSY_FOLIAGE_STRATEGY), event);
         } else {
             if (!ply.isSneaky() || event.isExtraLoud()) {
-                solver.playAssociation(ply, solver.findAssociation(ply, verticalOffsetAsMinus, isRightFoot), event);
+                playedSound |= solver.playAssociation(ply, solver.findAssociation(ply, verticalOffsetAsMinus, isRightFoot), event);
             }
             isRightFoot = !isRightFoot;
         }
@@ -301,7 +317,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         if (!assos.isNull()) {
             if (!isMessyFoliage) {
                 isMessyFoliage = true;
-                solver.playAssociation(ply, assos, State.WALK);
+                playedSound |= solver.playAssociation(ply, assos, State.WALK);
             }
         } else if (isMessyFoliage) {
             isMessyFoliage = false;
@@ -315,7 +331,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             assos = solver.findAssociation(ply, verticalOffsetAsMinus + 1, isRightFoot);
         }
 
-        solver.playAssociation(ply, assos, eventType);
+        playedSound |= solver.playAssociation(ply, assos, eventType);
     }
 
     protected void playMultifoot(LivingEntity ply, double verticalOffsetAsMinus, State eventType) {
@@ -332,7 +348,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             }
         }
 
-        solver.playAssociation(ply, leftFoot, eventType);
-        solver.playAssociation(ply, rightFoot, eventType);
+        playedSound |= solver.playAssociation(ply, leftFoot, eventType);
+        playedSound |= solver.playAssociation(ply, rightFoot, eventType);
     }
 }

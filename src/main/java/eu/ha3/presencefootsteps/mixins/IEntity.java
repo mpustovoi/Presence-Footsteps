@@ -9,4 +9,7 @@ import net.minecraft.entity.Entity;
 public interface IEntity {
     @Accessor("nextStepSoundDistance")
     void setNextStepDistance(float value);
+
+    @Accessor("nextStepSoundDistance")
+    float getNextStepDistance();
 }
