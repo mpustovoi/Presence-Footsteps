@@ -1,5 +1,10 @@
 package eu.ha3.presencefootsteps.sound;
 
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
@@ -86,8 +91,8 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
         return config.getEnabled() && (client.isInSingleplayer() || config.getEnabledMP());
     }
 
-    private Stream<? extends Entity> getTargets(Entity cameraEntity) {
-        return cameraEntity.getWorld().getOtherEntities(null, cameraEntity.getBoundingBox().expand(16), e -> {
+    private Stream<? extends Entity> getTargets(final Entity cameraEntity) {
+        final List<? extends Entity> entities = cameraEntity.getWorld().getOtherEntities(null, cameraEntity.getBoundingBox().expand(16), e -> {
             return e instanceof LivingEntity
                     && !(e instanceof WaterCreatureEntity)
                     && !(e instanceof FlyingEntity)
@@ -99,9 +104,21 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
                         && !e.hasVehicle()
                         && !((LivingEntity)e).isSleeping()
                         && (!(e instanceof PlayerEntity) || !e.isSpectator())
-                        && e.distanceTo(cameraEntity) <= 16
+                        && e.squaredDistanceTo(cameraEntity) <= 256
                         && config.getEntitySelector().test(e);
-        }).stream();
+        });
+
+        final Comparator<Entity> nearest = Comparator.comparingDouble(e -> e.squaredDistanceTo(cameraEntity));
+
+        if (entities.size() < config.getMaxSteppingEntities()) {
+            return entities.stream();
+        }
+        Set<Integer> alreadyVisited = new HashSet<>();
+        return entities.stream()
+            .sorted(nearest)
+                    // Always play sounds for players and the entities closest to the camera
+                        // If multiple entities share the same block, only play sounds for one of each distinct type
+            .filter(e -> e == cameraEntity || e instanceof PlayerEntity || (alreadyVisited.size() < config.getMaxSteppingEntities() && alreadyVisited.add(Objects.hash(e.getType(), e.getBlockPos()))));
     }
 
     public void onFrame(MinecraftClient client, Entity cameraEntity) {

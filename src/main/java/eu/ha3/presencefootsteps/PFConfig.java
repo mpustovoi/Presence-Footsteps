@@ -16,6 +16,7 @@ public class PFConfig extends JsonFile {
     private int otherPlayerVolume = 100;
     private int runningVolumeIncrease = 0;
     private int wetSoundsVolume = 50;
+    private int maxSteppingEntities = 50;
 
     private String stance = "UNKNOWN";
 
@@ -73,6 +74,10 @@ public class PFConfig extends JsonFile {
 
     public boolean getEnabledMP() {
         return multiplayer && getEnabled();
+    }
+
+    public int getMaxSteppingEntities() {
+        return Math.max(1, maxSteppingEntities);
     }
 
     public boolean getEnabled() {
