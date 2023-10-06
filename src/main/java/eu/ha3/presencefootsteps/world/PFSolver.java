@@ -190,10 +190,13 @@ public class PFSolver implements Solver {
         // Try to see if the block above is a carpet...
 
         String association = findForGolem(world, up, Lookup.CARPET_SUBSTRATE);
+        boolean wasGolem = false;
         String wetAssociation = Emitter.NOT_EMITTER;
 
         if (!Emitter.isEmitter(association)) {
             association = isolator.getBlockMap().getAssociation(above, Lookup.CARPET_SUBSTRATE);
+        } else {
+            wasGolem = true;
         }
 
         if (Emitter.isEmitter(association)) {
@@ -231,6 +234,8 @@ public class PFSolver implements Solver {
 
                 if (!Emitter.isEmitter(association)) {
                     association = isolator.getBlockMap().getAssociation(in, Lookup.EMPTY_SUBSTRATE);
+                } else {
+                    wasGolem = true;
                 }
             }
 
@@ -246,10 +251,7 @@ public class PFSolver implements Solver {
             }
         }
 
-        if (Emitter.isEmitter(association) && (
-                world.hasRain(up)
-                || in.getFluidState().isIn(FluidTags.WATER)
-                || above.getFluidState().isIn(FluidTags.WATER))) {
+        if (Emitter.isEmitter(association) && (world.hasRain(up) || (!wasGolem && (in.getFluidState().isIn(FluidTags.WATER) || above.getFluidState().isIn(FluidTags.WATER))))) {
             // Only if the block is open to the sky during rain
             // or the block is submerged
             // or the block is waterlogged
