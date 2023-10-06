@@ -285,15 +285,17 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     protected void simulateLanding(LivingEntity ply) {
-        if (ply.fallDistance > variator.LAND_HARD_DISTANCE_MIN) {
-            playMultifoot(ply, getOffsetMinus(ply), State.LAND);
-            // Always assume the player lands on their two feet
-            // Do not toggle foot:
-            // After landing sounds, the first foot will be same as the one used to jump.
-        } else if (/* !this.stepThisFrame &&*/ !ply.isSneaking()) {
-            playSinglefoot(ply, getOffsetMinus(ply), motionTracker.pickState(ply, State.CLIMB, State.CLIMB_RUN), isRightFoot);
-            if (!this.stepThisFrame)
-                isRightFoot = !isRightFoot;
+        if (ply.fallDistance > 0) {
+            if (ply.fallDistance > variator.LAND_HARD_DISTANCE_MIN) {
+                playMultifoot(ply, getOffsetMinus(ply), State.LAND);
+                // Always assume the player lands on their two feet
+                // Do not toggle foot:
+                // After landing sounds, the first foot will be same as the one used to jump.
+            } else if (/* !this.stepThisFrame &&*/ !ply.isSneaking()) {
+                playSinglefoot(ply, getOffsetMinus(ply), motionTracker.pickState(ply, State.CLIMB, State.CLIMB_RUN), isRightFoot);
+                if (!this.stepThisFrame)
+                    isRightFoot = !isRightFoot;
+            }
         }
     }
 
