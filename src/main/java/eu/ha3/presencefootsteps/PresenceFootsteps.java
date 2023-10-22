@@ -95,7 +95,7 @@ public class PresenceFootsteps implements ClientModInitializer {
     }
 
     private void onTick(MinecraftClient client) {
-        Optional.ofNullable(client.getCameraEntity()).filter(e -> !e.isRemoved()).ifPresent(cameraEntity -> {
+        Optional.ofNullable(client.player).filter(e -> !e.isRemoved()).ifPresent(cameraEntity -> {
             if (keyBinding.isPressed() && client.currentScreen == null) {
                 client.setScreen(new PFOptionsScreen(client.currentScreen));
             }
