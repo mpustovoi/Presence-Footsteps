@@ -99,7 +99,7 @@ class PFOptionsScreen extends GameGui {
 
         addButton(new Button(wideLeft, row += 24, 150, 20).onClick(sender -> {
             sender.setEnabled(false);
-            BlockReport.execute("report_concise", false).thenRun(() -> sender.setEnabled(true));
+            BlockReport.execute(PresenceFootsteps.getInstance().getEngine().getIsolator(), "report_concise", false).thenRun(() -> sender.setEnabled(true));
         })).setEnabled(client.world != null)
             .getStyle()
             .setText("menu.pf.report.concise");
@@ -107,7 +107,7 @@ class PFOptionsScreen extends GameGui {
         addButton(new Button(wideRight, row, 150, 20)
             .onClick(sender -> {
                 sender.setEnabled(false);
-                BlockReport.execute("report_full", true).thenRun(() -> sender.setEnabled(true));
+                BlockReport.execute(PresenceFootsteps.getInstance().getEngine().getIsolator(), "report_full", true).thenRun(() -> sender.setEnabled(true));
             }))
             .setEnabled(client.world != null)
             .getStyle()
