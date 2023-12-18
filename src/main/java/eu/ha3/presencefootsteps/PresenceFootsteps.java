@@ -90,7 +90,12 @@ public class PresenceFootsteps implements ClientModInitializer {
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(engine);
 
         FabricLoader.getInstance().getModContainer("presencefootsteps").ifPresent(container -> {
-            ResourceManagerHelper.registerBuiltinResourcePack(new Identifier("presencefootsteps", "default_sound_pack"), container, Text.translatable("pf.default_sounds.name"), ResourcePackActivationType.DEFAULT_ENABLED);
+            ResourceManagerHelper.registerBuiltinResourcePack(
+                    new Identifier("presencefootsteps", "default_sound_pack"),
+                    container,
+                    Text.translatable("pf.default_sounds.name"),
+                    ResourcePackActivationType.DEFAULT_ENABLED
+            );
         });
     }
 
@@ -108,7 +113,7 @@ public class PresenceFootsteps implements ClientModInitializer {
     private void onUpdate(TargettedVersion newVersion, TargettedVersion currentVersion) {
         ToastManager manager = MinecraftClient.getInstance().getToastManager();
 
-        SystemToast.add(manager, SystemToast.Type.TUTORIAL_HINT,
+        SystemToast.add(manager, SystemToast.Type.PERIODIC_NOTIFICATION,
                 Text.translatable("pf.update.title"),
                 Text.translatable("pf.update.text", newVersion.version().getFriendlyString(), newVersion.minecraft().getFriendlyString()));
     }
