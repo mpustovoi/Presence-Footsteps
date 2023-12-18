@@ -5,6 +5,7 @@ import eu.ha3.presencefootsteps.sound.acoustics.AcousticLibrary;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
 import eu.ha3.presencefootsteps.sound.player.StepSoundPlayer;
+import eu.ha3.presencefootsteps.util.BlockReport.Reportable;
 import eu.ha3.presencefootsteps.world.Index;
 import eu.ha3.presencefootsteps.world.Lookup;
 import eu.ha3.presencefootsteps.world.Solver;
@@ -13,7 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.sound.BlockSoundGroup;
 
-public interface Isolator {
+public interface Isolator extends Reportable {
     AcousticLibrary getAcoustics();
 
     Solver getSolver();

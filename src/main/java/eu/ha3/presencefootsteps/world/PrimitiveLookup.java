@@ -1,8 +1,11 @@
 package eu.ha3.presencefootsteps.world;
 
+import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
@@ -58,5 +61,15 @@ public class PrimitiveLookup implements Lookup<BlockSoundGroup> {
             }
         }
         return false;
+    }
+
+    @Override
+    public void writeToReport(boolean full, JsonObjectWriter writer, Map<String, BlockSoundGroup> groups) throws IOException {
+        writer.each(groups.values(), group -> {
+            String substrate = String.format(Locale.ENGLISH, "%.2f_%.2f", group.volume, group.pitch);
+            if (full || !contains(group)) {
+                writer.field(group.getStepSound().getId().toString() + "@" + substrate, getAssociation(group, substrate));
+            }
+        });
     }
 }

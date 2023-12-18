@@ -6,7 +6,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public interface Lookup<T> extends Loadable {
+import eu.ha3.presencefootsteps.util.BlockReport.Reportable;
+
+public interface Lookup<T> extends Loadable, Reportable {
     String EMPTY_SUBSTRATE = "";
     String CARPET_SUBSTRATE = "carpet";
     String WET_SUBSTRATE = "wet";
