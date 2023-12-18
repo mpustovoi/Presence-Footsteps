@@ -5,7 +5,7 @@ import java.util.Map;
 
 import eu.ha3.presencefootsteps.config.Variator;
 import eu.ha3.presencefootsteps.sound.acoustics.AcousticLibrary;
-import eu.ha3.presencefootsteps.sound.acoustics.AcousticsJsonParser;
+import eu.ha3.presencefootsteps.sound.acoustics.AcousticsFile;
 import eu.ha3.presencefootsteps.sound.acoustics.AcousticsPlayer;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
 import eu.ha3.presencefootsteps.sound.player.ImmediateSoundPlayer;
@@ -62,7 +62,7 @@ public record Isolator (
         hasConfigurations |= ResourceUtils.forEach(GOLEM_MAP, manager, golems()::load);
         hasConfigurations |= ResourceUtils.forEach(PRIMITIVE_MAP, manager, primitives()::load);
         hasConfigurations |= ResourceUtils.forEach(LOCOMOTION_MAP, manager, locomotions()::load);
-        hasConfigurations |= ResourceUtils.forEach(ACOUSTICS, manager, new AcousticsJsonParser(acoustics())::parse);
+        hasConfigurations |= ResourceUtils.forEach(ACOUSTICS, manager, reader -> AcousticsFile.read(reader, acoustics()::addAcoustic));
         hasConfigurations |= ResourceUtils.forEach(VARIATOR, manager, variator()::load);
         return hasConfigurations;
     }

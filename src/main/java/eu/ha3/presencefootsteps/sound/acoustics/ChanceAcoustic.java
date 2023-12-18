@@ -1,6 +1,5 @@
 package eu.ha3.presencefootsteps.sound.acoustics;
 
-import com.google.gson.JsonObject;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
@@ -10,12 +9,10 @@ record ChanceAcoustic(
         Acoustic acoustic,
         float probability
 ) implements Acoustic {
-    public static Acoustic fromJson(JsonObject json, AcousticsJsonParser context) {
-        Acoustic acoustic = context.solveAcoustic(json.get("acoustic"));
-        float probability = json.get("probability").getAsFloat();
-
-        return new ChanceAcoustic(acoustic, probability);
-    }
+    static final Serializer FACTORY = Serializer.ofJsObject((json, context) -> new ChanceAcoustic(
+        Acoustic.read(context, json.get("acoustic")),
+        json.get("probability").getAsFloat()
+    ));
 
     @Override
     public void playSound(SoundPlayer player, LivingEntity location, State event, Options inputOptions) {
