@@ -1,7 +1,11 @@
 package eu.ha3.presencefootsteps.sound;
 
+import java.io.IOException;
+import java.util.Map;
+
 import eu.ha3.presencefootsteps.config.Variator;
 import eu.ha3.presencefootsteps.sound.player.StepSoundPlayer;
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import eu.ha3.presencefootsteps.sound.acoustics.AcousticLibrary;
 import eu.ha3.presencefootsteps.sound.acoustics.AcousticsPlayer;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
@@ -84,5 +88,20 @@ public class PFIsolator implements Isolator {
     @Override
     public Variator getVariator() {
         return variator;
+    }
+
+    @Override
+    public void writeToReport(boolean full, JsonObjectWriter writer, Map<String, BlockSoundGroup> groups) throws IOException {
+        writer.object(() -> {
+            writer.object("blocks", () -> {
+                getBlockMap().writeToReport(full, writer, groups);
+            });
+            writer.object("entities", () -> {
+                getLocomotionMap().writeToReport(full, writer, groups);
+            });
+            writer.object("primitives", () -> {
+                getPrimitiveMap().writeToReport(full, writer, groups);
+            });
+        });
     }
 }

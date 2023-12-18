@@ -1,18 +1,26 @@
 package eu.ha3.presencefootsteps.world;
 
 import eu.ha3.presencefootsteps.PresenceFootsteps;
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import it.unimi.dsi.fastutil.objects.*;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.MappingResolver;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 
+import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A state lookup that finds an association for a given block state within a specific substrate (or no substrate).
@@ -56,6 +64,66 @@ public record StateLookup(Map<String, Bucket> substrates) implements Lookup<Bloc
         }
 
         return false;
+    }
+
+    @Override
+    public void writeToReport(boolean full, JsonObjectWriter writer, Map<String, BlockSoundGroup> groups) throws IOException {
+        writer.each(Registries.BLOCK, block -> {
+            BlockState state = block.getDefaultState();
+
+            var group = block.getDefaultState().getSoundGroup();
+            if (group != null && group.getStepSound() != null) {
+                String substrate = String.format(Locale.ENGLISH, "%.2f_%.2f", group.volume, group.pitch);
+                groups.put(group.getStepSound().getId().toString() + "@" + substrate, group);
+            }
+
+            if (full || !contains(state)) {
+                writer.object(Registries.BLOCK.getId(block).toString(), () -> {
+                    writer.field("class", getClassData(state));
+                    writer.field("tags", getTagData(state));
+                    writer.field("sound", getSoundData(group));
+                    writer.object("associations", () -> {
+                        getSubstrates().forEach(substrate -> {
+                            try {
+                                String association = getAssociation(state, substrate);
+                                if (Emitter.isResult(association)) {
+                                    writer.field(substrate, association);
+                                }
+                            } catch (IOException ignore) {}
+                        });
+                    });
+                });
+            }
+        });
+    }
+
+    private String getSoundData(@Nullable BlockSoundGroup group) {
+        if (group == null) {
+            return "NULL";
+        }
+        if (group.getStepSound() == null) {
+            return "NO_SOUND";
+        }
+        return group.getStepSound().getId().getPath();
+    }
+
+    private String getClassData(BlockState state) {
+        @Nullable
+        String canonicalName = state.getBlock().getClass().getCanonicalName();
+        if (canonicalName == null) {
+            return "<anonymous>";
+        }
+
+        try {
+            MappingResolver resolver = FabricLoader.getInstance().getMappingResolver();
+            return resolver.unmapClassName(resolver.getNamespaces().contains("named") ? "named" : "intermediary", canonicalName);
+        } catch (Throwable ignore) {}
+
+        return canonicalName;
+    }
+
+    private String getTagData(BlockState state) {
+        return Registries.BLOCK.streamTags().filter(state::isIn).map(TagKey::id).map(Identifier::toString).collect(Collectors.joining(","));
     }
 
     private interface Bucket {

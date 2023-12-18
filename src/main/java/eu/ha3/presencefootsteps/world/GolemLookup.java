@@ -2,10 +2,15 @@ package eu.ha3.presencefootsteps.world;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.entity.EntityType;
+import net.minecraft.registry.Registries;
+import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 
 public class GolemLookup implements Lookup<EntityType<?>> {
     private final Map<String, Map<Identifier, String>> substrates = new Object2ObjectLinkedOpenHashMap<>();
@@ -52,5 +57,25 @@ public class GolemLookup implements Lookup<EntityType<?>> {
             }
         }
         return false;
+    }
+
+    @Override
+    public void writeToReport(boolean full, JsonObjectWriter writer, Map<String, BlockSoundGroup> groups) throws IOException {
+        writer.each(Registries.ENTITY_TYPE, type -> {
+            if (full || !contains(type)) {
+                writer.object(EntityType.getId(type).toString(), () -> {
+                    writer.object("associations", () -> {
+                        getSubstrates().forEach(substrate -> {
+                            try {
+                                String association = getAssociation(type, substrate);
+                                if (Emitter.isResult(association)) {
+                                    writer.field(substrate, association);
+                                }
+                            } catch (IOException ignore) {}
+                        });
+                    });
+                });
+            }
+        });
     }
 }
