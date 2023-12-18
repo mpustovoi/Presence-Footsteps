@@ -69,6 +69,18 @@ class PFOptionsScreen extends GameGui {
         slider.setBounds(new Bounds(row, wideRight, 150, 20));
         slider.getStyle().setTooltip(Tooltip.of("menu.pf.volume.other_players.tooltip", 210)).setTooltipOffset(0, 25);
 
+        slider = addButton(new Slider(wideLeft, row += 24, 0, 100, config.getHostileEntitiesVolume()))
+                .onChange(config::setHostileEntitiesVolume)
+                .setTextFormat(formatVolume("menu.pf.volume.hostile_entities"));
+        slider.setBounds(new Bounds(row, wideLeft, 150, 20));
+        slider.getStyle().setTooltip(Tooltip.of("menu.pf.volume.hostile_entities.tooltip", 210)).setTooltipOffset(0, 25);
+
+        slider = addButton(new Slider(wideRight, row, 0, 100, config.getPassiveEntitiesVolume()))
+            .onChange(config::setPassiveEntitiesVolume)
+            .setTextFormat(formatVolume("menu.pf.volume.passive_entities"));
+        slider.setBounds(new Bounds(row, wideRight, 150, 20));
+        slider.getStyle().setTooltip(Tooltip.of("menu.pf.volume.passive_entities.tooltip", 210)).setTooltipOffset(0, 25);
+
         slider = addButton(new Slider(wideLeft, row += 24, -100, 100, config.getRunningVolumeIncrease()))
             .onChange(config::setRunningVolumeIncrease)
             .setTextFormat(formatVolume("menu.pf.volume.running"));
@@ -78,8 +90,8 @@ class PFOptionsScreen extends GameGui {
         slider = addButton(new Slider(wideLeft, row += 24, 0, 100, config.getWetSoundsVolume()))
                 .onChange(config::setWetSoundsVolume)
                 .setTextFormat(formatVolume("menu.pf.volume.wet"));
-            slider.setBounds(new Bounds(row, wideLeft, 310, 20));
-            slider.getStyle().setTooltip(Tooltip.of("menu.pf.volume.wet.tooltip", 210)).setTooltipOffset(0, 25);
+        slider.setBounds(new Bounds(row, wideLeft, 310, 20));
+        slider.styled(s -> s.setTooltip(Tooltip.of("menu.pf.volume.wet.tooltip", 210)).setTooltipOffset(0, 25));
 
         addButton(new EnumSlider<>(left, row += 24, config.getLocomotion())
                 .onChange(config::setLocomotion)

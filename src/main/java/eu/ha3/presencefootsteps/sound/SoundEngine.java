@@ -22,6 +22,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.FlyingEntity;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.entity.mob.WaterCreatureEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -61,6 +62,10 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
             } else {
                 volume *= config.getOtherPlayerVolume() / 100F;
             }
+        } else if (source instanceof HostileEntity) {
+            volume *= config.getHostileEntitiesVolume() / 100F;
+        } else {
+            volume *= config.getPassiveEntitiesVolume() / 100F;
         }
 
         float runningProgress = ((StepSoundSource) source).getStepGenerator(this)

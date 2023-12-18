@@ -279,6 +279,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
     protected void simulateLanding(LivingEntity ply) {
         Variator variator = engine.getIsolator().variator();
+
         if (ply.fallDistance > 0) {
             if (ply.fallDistance > variator.LAND_HARD_DISTANCE_MIN) {
                 playMultifoot(ply, getOffsetMinus(ply), State.LAND);
