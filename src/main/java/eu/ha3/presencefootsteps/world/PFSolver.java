@@ -1,8 +1,8 @@
 package eu.ha3.presencefootsteps.world;
 
 import eu.ha3.presencefootsteps.compat.ContraptionCollidable;
-import eu.ha3.presencefootsteps.sound.Isolator;
 import eu.ha3.presencefootsteps.sound.Options;
+import eu.ha3.presencefootsteps.sound.SoundEngine;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import net.minecraft.block.BlockState;
@@ -26,14 +26,14 @@ import java.util.List;
 import java.util.Locale;
 
 public class PFSolver implements Solver {
-    private static final Logger logger = LogManager.getLogger("PFSolver");
+    private static final Logger LOGGER = LogManager.getLogger("PFSolver");
 
     private static final double TRAP_DOOR_OFFSET = 0.1;
 
-    private final Isolator isolator;
+    private final SoundEngine engine;
 
-    public PFSolver(Isolator isolator) {
-        this.isolator = isolator;
+    public PFSolver(SoundEngine engine) {
+        this.engine = engine;
     }
 
     @Override
@@ -46,9 +46,9 @@ public class PFSolver implements Solver {
             assos = assos.at(ply);
 
             if (assos.hasAssociation()) {
-                isolator.getAcoustics().playAcoustic(assos, eventType, Options.EMPTY);
+                engine.getIsolator().acoustics().playAcoustic(assos, eventType, Options.EMPTY);
             } else {
-                isolator.getStepPlayer().playStep(assos);
+                engine.getIsolator().stepPlayer().playStep(assos);
             }
         }
 
@@ -171,10 +171,10 @@ public class PFSolver implements Solver {
         List<Entity> golems = world.getEntitiesByClass(Entity.class, new Box(pos).expand(0.5, 0, 0.5), e -> !(e instanceof PlayerEntity));
 
         if (!golems.isEmpty()) {
-            String golem = isolator.getGolemMap().getAssociation(golems.get(0).getType(), substrate);
+            String golem = engine.getIsolator().golems().getAssociation(golems.get(0).getType(), substrate);
 
             if (Emitter.isEmitter(golem)) {
-                logger.debug("Golem detected: " + golem);
+                LOGGER.debug("Golem detected: " + golem);
 
                 return golem;
             }
@@ -205,13 +205,13 @@ public class PFSolver implements Solver {
         String wetAssociation = Emitter.NOT_EMITTER;
 
         if (!Emitter.isEmitter(association)) {
-            association = isolator.getBlockMap().getAssociation(above, Lookup.CARPET_SUBSTRATE);
+            association = engine.getIsolator().blocks().getAssociation(above, Lookup.CARPET_SUBSTRATE);
         } else {
             wasGolem = true;
         }
 
         if (Emitter.isEmitter(association)) {
-            logger.debug("Carpet detected: " + association);
+            LOGGER.debug("Carpet detected: " + association);
             pos = up;
             in = above;
         } else {
@@ -222,10 +222,10 @@ public class PFSolver implements Solver {
                 BlockPos down = pos.down();
                 BlockState below = getBlockStateAt(entity, down);
 
-                association = isolator.getBlockMap().getAssociation(below, Lookup.FENCE_SUBSTRATE);
+                association = engine.getIsolator().blocks().getAssociation(below, Lookup.FENCE_SUBSTRATE);
 
                 if (Emitter.isResult(association)) {
-                    logger.debug("Fence detected: " + association);
+                    LOGGER.debug("Fence detected: " + association);
                     pos = down;
                     in = below;
                 }
@@ -236,7 +236,7 @@ public class PFSolver implements Solver {
                 shape = in.getOutlineShape(entity.getWorld(), pos);
             }
             if (!shape.isEmpty() && !shape.getBoundingBox().offset(pos).intersects(collider)) {
-                logger.debug("Skipping due to hitbox miss");
+                LOGGER.debug("Skipping due to hitbox miss");
                 return Association.NOT_EMITTER;
             }
 
@@ -244,7 +244,7 @@ public class PFSolver implements Solver {
                 association = findForGolem(entity.getWorld(), pos, Lookup.EMPTY_SUBSTRATE);
 
                 if (!Emitter.isEmitter(association)) {
-                    association = isolator.getBlockMap().getAssociation(in, Lookup.EMPTY_SUBSTRATE);
+                    association = engine.getIsolator().blocks().getAssociation(in, Lookup.EMPTY_SUBSTRATE);
                 } else {
                     wasGolem = true;
                 }
@@ -253,10 +253,10 @@ public class PFSolver implements Solver {
             if (Emitter.isEmitter(association)) {
                 // This condition implies that foliage over a NOT_EMITTER block CANNOT PLAY
                 // This block most not be executed if the association is a carpet
-                String foliage = isolator.getBlockMap().getAssociation(above, Lookup.FOLIAGE_SUBSTRATE);
+                String foliage = engine.getIsolator().blocks().getAssociation(above, Lookup.FOLIAGE_SUBSTRATE);
 
                 if (Emitter.isEmitter(foliage)) {
-                    logger.debug("Foliage detected: " + foliage);
+                    LOGGER.debug("Foliage detected: " + foliage);
                     association += "," + foliage;
                 }
             }
@@ -267,10 +267,10 @@ public class PFSolver implements Solver {
             // or the block is submerged
             // or the block is waterlogged
             // then append the wet effect to footsteps
-            String wet = isolator.getBlockMap().getAssociation(in, Lookup.WET_SUBSTRATE);
+            String wet = engine.getIsolator().blocks().getAssociation(in, Lookup.WET_SUBSTRATE);
 
             if (Emitter.isEmitter(wet)) {
-                logger.debug("Wet block detected: " + wet);
+                LOGGER.debug("Wet block detected: " + wet);
                 wetAssociation = wet;
             }
         }
@@ -291,7 +291,7 @@ public class PFSolver implements Solver {
         // Check for primitive in register
         BlockSoundGroup sounds = in.getSoundGroup();
         String substrate = String.format(Locale.ENGLISH, "%.2f_%.2f", sounds.volume, sounds.pitch);
-        String primitive = isolator.getPrimitiveMap().getAssociation(sounds, substrate);
+        String primitive = engine.getIsolator().primitives().getAssociation(sounds, substrate);
 
         if (Emitter.isResult(primitive)) {
             return new Association(in, pos).withDry(primitive).withWet(wetAssociation);
@@ -308,14 +308,14 @@ public class PFSolver implements Solver {
 
         BlockState above = getBlockStateAt(ply, pos.up());
 
-        String foliage = isolator.getBlockMap().getAssociation(above, Lookup.FOLIAGE_SUBSTRATE);
+        String foliage = engine.getIsolator().blocks().getAssociation(above, Lookup.FOLIAGE_SUBSTRATE);
 
         if (!Emitter.isEmitter(foliage)) {
             return Association.NOT_EMITTER;
         }
 
         // we discard the normal block association, and mark the foliage as detected
-        if (Emitter.MESSY_GROUND.equals(isolator.getBlockMap().getAssociation(above, Lookup.MESSY_SUBSTRATE))) {
+        if (Emitter.MESSY_GROUND.equals(engine.getIsolator().blocks().getAssociation(above, Lookup.MESSY_SUBSTRATE))) {
             return new Association(above, pos.up()).withDry(foliage);
         }
 
