@@ -9,7 +9,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import com.google.gson.stream.JsonWriter;
 import com.minelittlepony.common.util.GamePaths;
 
-import eu.ha3.presencefootsteps.PresenceFootsteps;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.sound.BlockSoundGroup;
@@ -19,7 +18,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 public interface BlockReport {
-    static CompletableFuture<?> execute(String baseName, boolean full) {
+    static CompletableFuture<?> execute(Reportable reportable, String baseName, boolean full) {
         MinecraftClient client = MinecraftClient.getInstance();
         ChatHud hud = client.inGameHud.getChatHud();
         return CompletableFuture.supplyAsync(() -> {
@@ -27,7 +26,7 @@ public interface BlockReport {
                 Path loc = getUniqueFileName(GamePaths.getGameDirectory().resolve("presencefootsteps"), baseName, ".json");
                 Files.createDirectories(loc.getParent());
                 try (var writer = JsonObjectWriter.of(new JsonWriter(Files.newBufferedWriter(loc)))) {
-                    PresenceFootsteps.getInstance().getEngine().getIsolator().writeToReport(full, writer, new Object2ObjectOpenHashMap<>());
+                    reportable.writeToReport(full, writer, new Object2ObjectOpenHashMap<>());
                 }
                 return loc;
             } catch (IOException e) {
