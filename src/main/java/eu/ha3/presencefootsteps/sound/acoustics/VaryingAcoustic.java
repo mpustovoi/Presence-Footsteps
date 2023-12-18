@@ -17,21 +17,21 @@ record VaryingAcoustic(
         Range volume,
         Range pitch
 ) implements Acoustic {
-    public static VaryingAcoustic of(String name, AcousticsJsonParser context) {
+    static final Serializer FACTORY = (json, context) -> {
+        if (json.isJsonPrimitive()) {
+            return new VaryingAcoustic(
+                context.getSoundName(json.getAsString()),
+                context.defaultVolume(),
+                context.defaultPitch()
+            );
+        }
+        JsonObject jso = json.getAsJsonObject();
         return new VaryingAcoustic(
-                context.getSoundName(name),
-                context.getVolumeRange(),
-                context.getPitchRange()
+                context.getSoundName(jso.get("name").getAsString()),
+                context.defaultVolume().read("vol", jso),
+                context.defaultPitch().read("pitch", jso)
         );
-    }
-
-    public static VaryingAcoustic fromJson(JsonObject json, AcousticsJsonParser context) {
-        return new VaryingAcoustic(
-                context.getSoundName(json.get("name").getAsString()),
-                context.getVolumeRange().read("vol", json, context),
-                context.getPitchRange().read("pitch", json, context)
-        );
-    }
+    };
 
     @Override
     public void playSound(SoundPlayer player, LivingEntity location, State event, Options inputOptions) {

@@ -1,12 +1,8 @@
 package eu.ha3.presencefootsteps.sound.acoustics;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.entity.LivingEntity;
 
 import java.util.List;
@@ -17,20 +13,12 @@ import java.util.List;
  * @author Hurry
  */
 record SimultaneousAcoustic(List<Acoustic> acoustics) implements Acoustic {
-
-    public static SimultaneousAcoustic of(JsonArray sim, AcousticsJsonParser context) {
-        List<Acoustic> acoustics = new ObjectArrayList<>(sim.size());
-
-        for (JsonElement i : sim) {
-            acoustics.add(context.solveAcoustic(i));
-        }
-
-        return new SimultaneousAcoustic(acoustics);
-    }
-
-    public static SimultaneousAcoustic fromJson(JsonObject json, AcousticsJsonParser context) {
-        return of(json.getAsJsonArray("array"), context);
-    }
+    static final Serializer FACTORY = (json, context) -> new SimultaneousAcoustic(
+            (json.isJsonArray() ? json.getAsJsonArray() : json.getAsJsonObject().getAsJsonArray("array")).asList()
+            .stream()
+            .map(i -> Acoustic.read(context, i))
+            .toList()
+    );
 
     @Override
     public void playSound(SoundPlayer player, LivingEntity location, State event, Options inputOptions) {

@@ -4,29 +4,22 @@ import java.util.Random;
 
 import com.google.gson.JsonObject;
 
-import eu.ha3.presencefootsteps.sound.acoustics.AcousticsJsonParser;
-
 public record Range (float min, float max) {
+    public static final Range DEFAULT = exactly(1);
+
     public static Range exactly(float value) {
         return new Range(value, value);
     }
 
-    public Range read(String name, JsonObject json, AcousticsJsonParser context) {
-        float min = this.min;
-        float max = this.max;
-        if (json.has(name + "_min")) {
-            min = context.getPercentage(json, name + "_min");
-        }
-
-        if (json.has(name + "_max")) {
-            max = context.getPercentage(json, name + "_max");
-        }
-
+    public Range read(String name, JsonObject json) {
         if (json.has(name)) {
-            min = max = context.getPercentage(json, name);
+            return exactly(getPercentage(json, name, min));
         }
 
-        return new Range(min, max);
+        return new Range(
+                getPercentage(json, name + "_min", this.min),
+                getPercentage(json, name + "_max", this.max)
+        );
     }
 
     public float random(Random rand) {
@@ -35,5 +28,12 @@ public record Range (float min, float max) {
 
     public float on(float value) {
         return MathUtil.between(min, max, value);
+    }
+
+    private static float getPercentage(JsonObject object, String param, float fallback) {
+        if (!object.has(param)) {
+            return fallback;
+        }
+        return object.get(param).getAsFloat() / 100F;
     }
 }

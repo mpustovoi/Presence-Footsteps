@@ -2,7 +2,6 @@ package eu.ha3.presencefootsteps.sound.acoustics;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
@@ -26,6 +25,25 @@ record WeightedAcoustic(
         List<Acoustic> theAcoustics,
         float[] probabilityThresholds
 ) implements Acoustic {
+    static final Serializer FACTORY = Serializer.ofJsObject((json, context) -> {
+        List<Integer> weights = new ObjectArrayList<>();
+        List<Acoustic> acoustics = new ObjectArrayList<>();
+
+        JsonArray sim = json.getAsJsonArray("array");
+        Iterator<JsonElement> iter = sim.iterator();
+
+        while (iter.hasNext()) {
+            weights.add(iter.next().getAsInt());
+
+            if (!iter.hasNext()) {
+                throw new JsonParseException("Probability has odd number of children!");
+            }
+
+            acoustics.add(Acoustic.read(context, iter.next()));
+        }
+
+        return of(acoustics, weights);
+    });
 
     public static WeightedAcoustic of(List<Acoustic> acoustics, List<Integer> weights) {
         List<Acoustic> theAcoustics = new ObjectArrayList<>(acoustics);
@@ -47,27 +65,7 @@ record WeightedAcoustic(
         return new WeightedAcoustic(theAcoustics, probabilityThresholds);
     }
 
-    public static Acoustic fromJson(JsonObject json, AcousticsJsonParser context) {
-        List<Integer> weights = new ObjectArrayList<>();
-        List<Acoustic> acoustics = new ObjectArrayList<>();
 
-        JsonArray sim = json.getAsJsonArray("array");
-        Iterator<JsonElement> iter = sim.iterator();
-
-        while (iter.hasNext()) {
-            JsonElement subElement = iter.next();
-            weights.add(subElement.getAsInt());
-
-            if (!iter.hasNext()) {
-                throw new JsonParseException("Probability has odd number of children!");
-            }
-
-            subElement = iter.next();
-            acoustics.add(context.solveAcoustic(subElement));
-        }
-
-        return WeightedAcoustic.of(acoustics, weights);
-    }
 
     public WeightedAcoustic {
         theAcoustics = new ObjectImmutableList<>(theAcoustics);
