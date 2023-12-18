@@ -86,13 +86,13 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
             nextFlapTime = now + variator.WING_JUMPING_REST_TIME;
         }
 
-        boolean hugeLanding = !isAirborne && ply.fallDistance > variator.HUGEFALL_LANDING_DISTANCE_MIN;
+        boolean hugeLanding = !isAirborne && lastFallDistance > variator.HUGEFALL_LANDING_DISTANCE_MIN;
         boolean speedingJumpStateChange = speed > variator.MIN_MOTION_HOR;
 
         if (hugeLanding || speedingJumpStateChange) {
             if (!isAirborne) {
                 float volume = speedingJumpStateChange ? 2
-                        : MathUtil.scalex(ply.fallDistance, variator.HUGEFALL_LANDING_DISTANCE_MIN, variator.HUGEFALL_LANDING_DISTANCE_MAX);
+                        : MathUtil.scalex(lastFallDistance, variator.HUGEFALL_LANDING_DISTANCE_MIN, variator.HUGEFALL_LANDING_DISTANCE_MAX);
                 engine.getIsolator().acoustics().playAcoustic(ply, "_SWIFT", State.LAND, Options.singular("gliding_volume", volume));
             } else {
                 engine.getIsolator().acoustics().playAcoustic(ply, "_SWIFT", State.JUMP, Options.EMPTY);

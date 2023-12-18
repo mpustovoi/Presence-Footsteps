@@ -25,6 +25,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     // Airborne
     protected boolean isAirborne;
 
+    protected float lastFallDistance;
     protected float lastReference;
     protected boolean isImmobile;
     protected long timeImmobile;
@@ -51,7 +52,6 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     private boolean playedSound;
 
     private int ticksInactive;
-
 
     public TerrestrialStepSoundGenerator(SoundEngine engine, Modifier<TerrestrialStepSoundGenerator> modifier) {
         this.engine = engine;
@@ -82,6 +82,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         } else {
             ticksInactive = 0;
         }
+        lastFallDistance = ply.fallDistance;
         return !isInactive();
     }
 
@@ -280,16 +281,17 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     protected void simulateLanding(LivingEntity ply) {
         Variator variator = engine.getIsolator().variator();
 
-        if (ply.fallDistance > 0) {
-            if (ply.fallDistance > variator.LAND_HARD_DISTANCE_MIN) {
+        if (lastFallDistance > 0) {
+            if (lastFallDistance > variator.LAND_HARD_DISTANCE_MIN) {
                 playMultifoot(ply, getOffsetMinus(ply), State.LAND);
                 // Always assume the player lands on their two feet
                 // Do not toggle foot:
                 // After landing sounds, the first foot will be same as the one used to jump.
-            } else if (/* !this.stepThisFrame &&*/ !ply.isSneaking()) {
+            } else if (!stepThisFrame && !ply.isSneaking()) {
                 playSinglefoot(ply, getOffsetMinus(ply), motionTracker.pickState(ply, State.CLIMB, State.CLIMB_RUN), isRightFoot);
-                if (!this.stepThisFrame)
+                if (!stepThisFrame) {
                     isRightFoot = !isRightFoot;
+                }
             }
         }
     }
