@@ -1,7 +1,5 @@
 package eu.ha3.presencefootsteps.sound.acoustics;
 
-import com.google.gson.JsonObject;
-
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
@@ -15,14 +13,12 @@ record DelayedAcoustic(
         Range pitch,
         Period delay
 ) implements Acoustic {
-    public static DelayedAcoustic fromJson(JsonObject json, AcousticsJsonParser context) {
-        return new DelayedAcoustic(
-                context.getSoundName(json.get("name").getAsString()),
-                context.getVolumeRange().read("vol", json, context),
-                context.getPitchRange().read("pitch", json, context),
-                Period.fromJson(json, "delay")
-        );
-    }
+    static final Serializer FACTORY = Serializer.ofJsObject((json, context) -> new DelayedAcoustic(
+            context.getSoundName(json.get("name").getAsString()),
+            context.defaultVolume().read("vol", json),
+            context.defaultPitch().read("pitch", json),
+            Period.fromJson(json, "delay")
+    ));
 
     @Override
     public void playSound(SoundPlayer player, LivingEntity location, State event, Options inputOptions) {
