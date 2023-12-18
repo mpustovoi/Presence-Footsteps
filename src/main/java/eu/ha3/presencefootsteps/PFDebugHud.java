@@ -26,24 +26,24 @@ public class PFDebugHud {
 
             renderSoundList("Primitive: " + state.getSoundGroup().getStepSound().getId()
                     + "@" + String.format(Locale.ENGLISH, "%.2f_%.2f", state.getSoundGroup().volume, state.getSoundGroup().pitch),
-                    engine.getIsolator().getPrimitiveMap().getAssociations(state.getSoundGroup()),
+                    engine.getIsolator().primitives().getAssociations(state.getSoundGroup()),
                     list);
 
             renderSoundList("PF Sounds",
-                    engine.getIsolator().getBlockMap().getAssociations(state),
+                    engine.getIsolator().blocks().getAssociations(state),
                     list);
 
             BlockSoundGroup sound = state.getSoundGroup();
             renderSoundList("PF Prims",
-                    engine.getIsolator().getPrimitiveMap().getAssociations(sound),
+                    engine.getIsolator().primitives().getAssociations(sound),
                     list);
         }
 
         if (client.targetedEntity != null) {
             renderSoundList("PF Golem Sounds",
-                    engine.getIsolator().getGolemMap().getAssociations(client.targetedEntity.getType()),
+                    engine.getIsolator().golems().getAssociations(client.targetedEntity.getType()),
                     list);
-            list.add(engine.getIsolator().getLocomotionMap().lookup(client.targetedEntity).getDisplayName());
+            list.add(engine.getIsolator().locomotions().lookup(client.targetedEntity).getDisplayName());
         }
     }
 

@@ -1,6 +1,7 @@
 package eu.ha3.presencefootsteps.world;
 
 import eu.ha3.presencefootsteps.PresenceFootsteps;
+import eu.ha3.presencefootsteps.sound.SoundEngine;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
 import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
@@ -19,10 +20,16 @@ import java.util.Map;
 public class LocomotionLookup implements Index<Entity, Locomotion> {
     private final Map<Identifier, Locomotion> values = new Object2ObjectLinkedOpenHashMap<>();
 
+    private final SoundEngine engine;
+
+    public LocomotionLookup(SoundEngine engine) {
+        this.engine = engine;
+    }
+
     @Override
     public Locomotion lookup(Entity key) {
         if (key instanceof PlayerEntity) {
-            return Locomotion.forPlayer((PlayerEntity)key, Locomotion.NONE);
+            return Locomotion.forPlayer((PlayerEntity)key, engine.getConfig().getLocomotion());
         }
         return Locomotion.forLiving(key, values.getOrDefault(EntityType.getId(key.getType()), Locomotion.BIPED));
     }

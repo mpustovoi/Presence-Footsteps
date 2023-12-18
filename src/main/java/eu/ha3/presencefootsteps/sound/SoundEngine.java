@@ -13,10 +13,9 @@ import org.jetbrains.annotations.Nullable;
 
 import eu.ha3.presencefootsteps.PFConfig;
 import eu.ha3.presencefootsteps.mixins.IEntity;
-import eu.ha3.presencefootsteps.sound.acoustics.AcousticsJsonParser;
-import eu.ha3.presencefootsteps.sound.generator.Locomotion;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
-import eu.ha3.presencefootsteps.util.ResourceUtils;
+import eu.ha3.presencefootsteps.world.Solver;
+import eu.ha3.presencefootsteps.world.PFSolver;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -40,16 +39,10 @@ import net.minecraft.util.crash.CrashReportSection;
 import net.minecraft.util.profiler.Profiler;
 
 public class SoundEngine implements IdentifiableResourceReloadListener {
-    private static final Identifier BLOCK_MAP = new Identifier("presencefootsteps", "config/blockmap.json");
-    private static final Identifier GOLEM_MAP = new Identifier("presencefootsteps", "config/golemmap.json");
-    private static final Identifier LOCOMOTION_MAP = new Identifier("presencefootsteps", "config/locomotionmap.json");
-    private static final Identifier PRIMITIVE_MAP = new Identifier("presencefootsteps", "config/primitivemap.json");
-    private static final Identifier ACOUSTICS = new Identifier("presencefootsteps", "config/acoustics.json");
-    private static final Identifier VARIATOR = new Identifier("presencefootsteps", "config/variator.json");
-
     private static final Identifier ID = new Identifier("presencefootsteps", "sounds");
 
-    private PFIsolator isolator = new PFIsolator(this);
+    private Isolator isolator = new Isolator(this);
+    private Solver solver = new PFSolver(this);
 
     private final PFConfig config;
 
@@ -81,6 +74,14 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
         return isolator;
     }
 
+    public Solver getSolver() {
+        return solver;
+    }
+
+    public PFConfig getConfig() {
+        return config;
+    }
+
     public void reload() {
         if (config.getEnabled()) {
             reloadEverything(MinecraftClient.getInstance().getResourceManager());
@@ -102,7 +103,7 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
                             || e instanceof ArmorStandEntity
                             || e instanceof BoatEntity
                             || e instanceof AbstractMinecartEntity)
-                        && !isolator.getGolemMap().contains(e.getType())
+                        && !isolator.golems().contains(e.getType())
                         && !e.hasVehicle()
                         && !((LivingEntity)e).isSleeping()
                         && (!(e instanceof PlayerEntity) || !e.isSpectator())
@@ -128,7 +129,6 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
             getTargets(cameraEntity).forEach(e -> {
                 try {
                     ((StepSoundSource) e).getStepGenerator(this).ifPresent(generator -> {
-                        generator.setIsolator(isolator);
                         if (generator.generateFootsteps((LivingEntity)e)) {
                             ((IEntity) e).setNextStepDistance(Integer.MAX_VALUE);
                         } else if (((IEntity) e).getNextStepDistance() == Integer.MAX_VALUE) {
@@ -142,15 +142,15 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
                         section.add("Entity Type", "null");
                     } else {
                         e.populateCrashReport(section);
-                        section.add("Entity's Locomotion Type", isolator.getLocomotionMap().lookup(e));
-                        section.add("Entity is Golem", isolator.getGolemMap().contains(e.getType()));
+                        section.add("Entity's Locomotion Type", isolator.locomotions().lookup(e));
+                        section.add("Entity is Golem", isolator.golems().contains(e.getType()));
                     }
                     config.populateCrashReport(report.addElement("PF Configuration"));
                     throw new CrashException(report);
                 }
             });
 
-            isolator.getSoundPlayer().think(); // Delayed sounds
+            isolator.soundPlayer().think(); // Delayed sounds
         }
     }
 
@@ -174,13 +174,6 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
         }).isPresent();
     }
 
-    public Locomotion getLocomotion(LivingEntity entity) {
-        if (entity instanceof PlayerEntity) {
-            return Locomotion.forPlayer((PlayerEntity)entity, config.getLocomotion());
-        }
-        return isolator.getLocomotionMap().lookup(entity);
-    }
-
     @Override
     public Identifier getFabricId() {
         return ID;
@@ -200,19 +193,12 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
     }
 
     public void reloadEverything(ResourceManager manager) {
-        isolator = new PFIsolator(this);
-        hasConfigurations = false;
-
-        hasConfigurations |= ResourceUtils.forEachReverse(BLOCK_MAP, manager, isolator.getBlockMap()::load);
-        hasConfigurations |= ResourceUtils.forEach(GOLEM_MAP, manager, isolator.getGolemMap()::load);
-        hasConfigurations |= ResourceUtils.forEach(PRIMITIVE_MAP, manager, isolator.getPrimitiveMap()::load);
-        hasConfigurations |= ResourceUtils.forEach(LOCOMOTION_MAP, manager, isolator.getLocomotionMap()::load);
-        hasConfigurations |= ResourceUtils.forEach(ACOUSTICS, manager, new AcousticsJsonParser(isolator.getAcoustics())::parse);
-        hasConfigurations |= ResourceUtils.forEach(VARIATOR, manager, isolator.getVariator()::load);
+        isolator = new Isolator(this);
+        hasConfigurations = isolator.load(manager);
     }
 
     public void shutdown() {
-        isolator = new PFIsolator(this);
+        isolator = new Isolator(this);
         hasConfigurations = false;
 
         PlayerEntity player = MinecraftClient.getInstance().player;

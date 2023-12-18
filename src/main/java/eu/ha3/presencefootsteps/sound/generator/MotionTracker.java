@@ -1,5 +1,6 @@
 package eu.ha3.presencefootsteps.sound.generator;
 
+import eu.ha3.presencefootsteps.config.Variator;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import net.minecraft.client.network.OtherClientPlayerEntity;
@@ -93,14 +94,15 @@ public class MotionTracker {
             }
             return walk;
         }
-        return getHorizontalSpeed() > generator.variator.SPEED_TO_RUN ? run : walk;
+        return getHorizontalSpeed() > generator.engine.getIsolator().variator().SPEED_TO_RUN ? run : walk;
     }
 
     public float getSpeedScalingRatio(LivingEntity entity) {
-        generator.variator.RUNNING_RAMPUP_BEGIN = 0.011F;
-        generator.variator.RUNNING_RAMPUP_END = 0.022F;
-        double relativeSpeed = getHorizontalSpeed() + (getMotionY() * getMotionY()) - generator.variator.RUNNING_RAMPUP_BEGIN;
-        double maxSpeed = generator.variator.RUNNING_RAMPUP_END - generator.variator.RUNNING_RAMPUP_BEGIN;
+        Variator variator = generator.engine.getIsolator().variator();
+        variator.RUNNING_RAMPUP_BEGIN = 0.011F;
+        variator.RUNNING_RAMPUP_END = 0.022F;
+        double relativeSpeed = getHorizontalSpeed() + (getMotionY() * getMotionY()) - variator.RUNNING_RAMPUP_BEGIN;
+        double maxSpeed = variator.RUNNING_RAMPUP_END - variator.RUNNING_RAMPUP_BEGIN;
         return (float)MathHelper.clamp(relativeSpeed / maxSpeed, 0, 1);
     }
 }
