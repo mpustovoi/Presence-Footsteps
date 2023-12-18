@@ -66,6 +66,10 @@ public class PresenceFootsteps implements ClientModInitializer {
         return config;
     }
 
+    public KeyBinding getKeyBinding() {
+        return keyBinding;
+    }
+
     public UpdateChecker getUpdateChecker() {
         return updater;
     }
@@ -79,9 +83,7 @@ public class PresenceFootsteps implements ClientModInitializer {
         config = new PFConfig(pfFolder.resolve("userconfig.json"), this);
         config.load();
 
-        keyBinding = new KeyBinding("key.presencefootsteps.settings", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F10, "key.categories.misc");
-
-        KeyBindingHelper.registerKeyBinding(keyBinding);
+        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.presencefootsteps.settings", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F10, "key.categories.misc"));
 
         engine = new SoundEngine(config);
         debugHud = new PFDebugHud(engine);
