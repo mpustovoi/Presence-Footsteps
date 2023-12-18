@@ -2,7 +2,9 @@ package eu.ha3.presencefootsteps.sound.generator;
 
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.util.MathUtil;
+import eu.ha3.presencefootsteps.config.Variator;
 import eu.ha3.presencefootsteps.sound.Options;
+import eu.ha3.presencefootsteps.sound.SoundEngine;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.Vec3d;
 
@@ -15,8 +17,8 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
     private long lastTimeImmobile;
     protected long nextFlapTime;
 
-    public WingedStepSoundGenerator(Modifier<TerrestrialStepSoundGenerator> modifier) {
-        super(modifier);
+    public WingedStepSoundGenerator(SoundEngine engine, Modifier<TerrestrialStepSoundGenerator> modifier) {
+        super(engine, modifier);
     }
 
     @Override
@@ -47,7 +49,7 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
                 isImmobile = true;
             } else if (isImmobile && !stationary) {
                 isImmobile = false;
-                return System.currentTimeMillis() - timeImmobile > variator.IMMOBILE_DURATION;
+                return System.currentTimeMillis() - timeImmobile > engine.getIsolator().variator().IMMOBILE_DURATION;
             }
 
             return false;
@@ -57,6 +59,7 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
     }
 
     protected int getWingSpeed() {
+        Variator variator = engine.getIsolator().variator();
         return switch (state) {
             case COASTING -> flapMod == 0
                     ? variator.WING_SPEED_COAST
@@ -77,6 +80,7 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
         final long now = System.currentTimeMillis();
 
         float speed = (float) Math.sqrt(motionTracker.getHorizontalSpeed());
+        Variator variator = engine.getIsolator().variator();
 
         if (isAirborne) {
             nextFlapTime = now + variator.WING_JUMPING_REST_TIME;
@@ -89,9 +93,9 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
             if (!isAirborne) {
                 float volume = speedingJumpStateChange ? 2
                         : MathUtil.scalex(ply.fallDistance, variator.HUGEFALL_LANDING_DISTANCE_MIN, variator.HUGEFALL_LANDING_DISTANCE_MAX);
-                acoustics.playAcoustic(ply, "_SWIFT", State.LAND, Options.singular("gliding_volume", volume));
+                engine.getIsolator().acoustics().playAcoustic(ply, "_SWIFT", State.LAND, Options.singular("gliding_volume", volume));
             } else {
-                acoustics.playAcoustic(ply, "_SWIFT", State.JUMP, Options.EMPTY);
+                engine.getIsolator().acoustics().playAcoustic(ply, "_SWIFT", State.JUMP, Options.EMPTY);
             }
         }
 
@@ -104,6 +108,7 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
 
     protected void simulateFlying(LivingEntity ply) {
         final long now = System.currentTimeMillis();
+        Variator variator = engine.getIsolator().variator();
 
         if (updateState(motionTracker.getHorizontalSpeed(), motionTracker.getMotionY(), ply.sidewaysSpeed)) {
             nextFlapTime = now + variator.FLIGHT_TRANSITION_TIME;
@@ -122,13 +127,14 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
                         variator.WING_IMMOBILE_FADE_START + variator.WING_IMMOBILE_FADE_DURATION);
             }
 
-            acoustics.playAcoustic(ply, "_WING", State.WALK, Options.singular("gliding_volume", volume));
+            engine.getIsolator().acoustics().playAcoustic(ply, "_WING", State.WALK, Options.singular("gliding_volume", volume));
         }
     }
 
     protected boolean updateState(double horSpeed, double verticalSpeed, double strafe) {
         float motionHor = (float) Math.sqrt(horSpeed);
         FlightState result = FlightState.IDLE;
+        Variator variator = engine.getIsolator().variator();
         if (motionHor > variator.MIN_DASH_MOTION) {
             result = FlightState.DASHING;
         } else if (motionHor > variator.MIN_COAST_MOTION && (float) Math.abs(verticalSpeed) < variator.MIN_COAST_MOTION / 20) {

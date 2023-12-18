@@ -10,21 +10,13 @@ import org.jetbrains.annotations.Nullable;
 import eu.ha3.presencefootsteps.config.Variator;
 import eu.ha3.presencefootsteps.mixins.ILivingEntity;
 import eu.ha3.presencefootsteps.sound.State;
-import eu.ha3.presencefootsteps.sound.acoustics.AcousticLibrary;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
-import eu.ha3.presencefootsteps.sound.Isolator;
 import eu.ha3.presencefootsteps.sound.Options;
+import eu.ha3.presencefootsteps.sound.SoundEngine;
 import eu.ha3.presencefootsteps.world.Association;
 import eu.ha3.presencefootsteps.world.Solver;
 
 class TerrestrialStepSoundGenerator implements StepSoundGenerator {
-    // Construct
-    protected Solver solver;
-    protected AcousticLibrary acoustics;
-    protected Variator variator;
-
-    protected final MotionTracker motionTracker = new MotionTracker(this);
-
     // Footsteps
     protected float dmwBase;
     protected float dwmYChange;
@@ -51,27 +43,25 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     private boolean isMessyFoliage;
     private long brushesTime;
 
+    protected final SoundEngine engine;
+    protected final Solver solver;
     private final Modifier<TerrestrialStepSoundGenerator> modifier;
+    protected final MotionTracker motionTracker = new MotionTracker(this);
 
     private boolean playedSound;
 
     private int ticksInactive;
 
 
-    public TerrestrialStepSoundGenerator(Modifier<TerrestrialStepSoundGenerator> modifier) {
+    public TerrestrialStepSoundGenerator(SoundEngine engine, Modifier<TerrestrialStepSoundGenerator> modifier) {
+        this.engine = engine;
+        this.solver = engine.getSolver();
         this.modifier = modifier;
     }
 
     @Override
     public boolean isInactive() {
         return ticksInactive > 23;
-    }
-
-    @Override
-    public void setIsolator(Isolator isolator) {
-        solver = isolator.getSolver();
-        acoustics = isolator.getAcoustics();
-        variator = isolator.getVariator();
     }
 
     @Override
@@ -107,6 +97,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
     protected boolean playbackImmobile() {
         long now = System.currentTimeMillis();
+        Variator variator = engine.getIsolator().variator();
         if (now - immobilePlayback > immobileInterval) {
             immobilePlayback = now;
             immobileInterval = (int) Math.floor(
@@ -124,7 +115,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             isImmobile = true;
         } else if (isImmobile && diff != 0f) {
             isImmobile = false;
-            return System.currentTimeMillis() - timeImmobile > variator.IMMOBILE_DURATION;
+            return System.currentTimeMillis() - timeImmobile > engine.getIsolator().variator().IMMOBILE_DURATION;
         }
 
         return false;
@@ -147,7 +138,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         if (scalStat != scal < 0.001f) {
             scalStat = !scalStat;
 
-            if (scalStat && variator.PLAY_WANDER && !hasStoppingConditions(ply)) {
+            if (scalStat && engine.getIsolator().variator().PLAY_WANDER && !hasStoppingConditions(ply)) {
                 playedSound |= solver.playAssociation(ply, solver.findAssociation(ply, 0, isRightFoot), State.WANDER);
             }
         }
@@ -166,6 +157,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
             float distance = 0f;
             double verticalOffsetAsMinus = 0f;
+            Variator variator = engine.getIsolator().variator();
 
             if (ply.isClimbing() && !ply.isOnGround()) {
                 distance = variator.DISTANCE_LADDER;
@@ -222,7 +214,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             Options options = Options.singular("gliding_volume", volume);
             State state = ply.isSubmergedInWater() ? State.SWIM : event;
 
-            acoustics.playAcoustic(ply, "_SWIM", state, options);
+            engine.getIsolator().acoustics().playAcoustic(ply, "_SWIM", state, options);
 
             playedSound |= solver.playAssociation(ply, solver.findAssociation(ply, ply.getBlockPos().down(), Solver.MESSY_FOLIAGE_STRATEGY), event);
         } else {
@@ -270,6 +262,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     protected void simulateJumping(LivingEntity ply) {
+        Variator variator = engine.getIsolator().variator();
         if (variator.EVENT_ON_JUMP) {
             if (motionTracker.getHorizontalSpeed() < variator.SPEED_TO_JUMP_AS_MULTIFOOT) {
                 // STILL JUMP
@@ -285,6 +278,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     protected void simulateLanding(LivingEntity ply) {
+        Variator variator = engine.getIsolator().variator();
         if (ply.fallDistance > 0) {
             if (ply.fallDistance > variator.LAND_HARD_DISTANCE_MIN) {
                 playMultifoot(ply, getOffsetMinus(ply), State.LAND);

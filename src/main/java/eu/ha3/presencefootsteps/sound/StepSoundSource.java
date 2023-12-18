@@ -21,11 +21,11 @@ public interface StepSoundSource {
 
         @Override
         public Optional<StepSoundGenerator> getStepGenerator(SoundEngine engine) {
-            Locomotion loco = engine.getLocomotion(entity);
+            Locomotion loco = engine.getIsolator().locomotions().lookup(entity);
 
             if (stepSoundGenerator == null || loco != locomotion) {
                 locomotion = loco;
-                stepSoundGenerator = loco.supplyGenerator();
+                stepSoundGenerator = loco.supplyGenerator(engine);
             }
             return stepSoundGenerator;
         }
