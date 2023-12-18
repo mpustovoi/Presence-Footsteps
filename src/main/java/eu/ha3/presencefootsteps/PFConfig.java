@@ -14,6 +14,8 @@ public class PFConfig extends JsonFile {
 
     private int clientPlayerVolume = 100;
     private int otherPlayerVolume = 100;
+    private int hostileEntitiesVolume = 100;
+    private int passiveEntitiesVolume = 100;
     private int runningVolumeIncrease = 0;
     private int wetSoundsVolume = 50;
     private int maxSteppingEntities = 50;
@@ -88,6 +90,14 @@ public class PFConfig extends JsonFile {
         return MathHelper.clamp(volume, 0, 100);
     }
 
+    public int getHostileEntitiesVolume() {
+        return MathHelper.clamp(hostileEntitiesVolume, 0, 100);
+    }
+
+    public int getPassiveEntitiesVolume() {
+        return MathHelper.clamp(passiveEntitiesVolume, 0, 100);
+    }
+
     public int getClientPlayerVolume() {
         return MathHelper.clamp(clientPlayerVolume, 0, 100);
     }
@@ -121,6 +131,18 @@ public class PFConfig extends JsonFile {
         return getGlobalVolume();
     }
 
+    public float setHostileEntitiesVolume(float volume) {
+        hostileEntitiesVolume = volumeScaleToInt(volume);
+        save();
+        return getHostileEntitiesVolume();
+    }
+
+    public float setPassiveEntitiesVolume(float volume) {
+        hostileEntitiesVolume = volumeScaleToInt(volume);
+        save();
+        return getPassiveEntitiesVolume();
+    }
+
     public float setClientPlayerVolume(float volume) {
         clientPlayerVolume = volumeScaleToInt(volume);
         save();
@@ -137,7 +159,6 @@ public class PFConfig extends JsonFile {
         wetSoundsVolume = volumeScaleToInt(volume);
         save();
         return getWetSoundsVolume();
-
     }
 
     public float setRunningVolumeIncrease(float volume) {
