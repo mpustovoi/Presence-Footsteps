@@ -144,9 +144,9 @@
 	"minecraft:soul_fire.foliage": "fire",
 	"minecraft:spawner": "metalbar",
 
-	"minecraft:grass": "NOT_EMITTER",
-	"minecraft:grass.messy": "MESSY_GROUND",
-	"minecraft:grass.foliage": "brush",
+	"minecraft:short_grass": "NOT_EMITTER",
+	"minecraft:short_grass.messy": "MESSY_GROUND",
+	"minecraft:short_grass.foliage": "brush",
 
 	"minecraft:fern": "NOT_EMITTER",
 	"minecraft:fern.messy": "MESSY_GROUND",
