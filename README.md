@@ -41,7 +41,7 @@ or used together with packs from the community.
 
 Note that you need **at least one** sounds pack enabled for the mod to function.
 
-![image](https://github.com/Sollace/Presence-Footsteps/assets/6429283/c0a2400b-b041-46fe-9d19-7eefe89ac021)
+![image](https://github.com/Sollace/Presence-Footsteps/assets/6429283/9c50aa59-0f59-4324-aab7-cb360acac2ad)
 
 ## Mod Support
 
