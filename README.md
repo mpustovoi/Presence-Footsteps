@@ -4,6 +4,8 @@
 ![License](https://img.shields.io/github/license/Sollace/Presence-Footsteps)
 ![](https://img.shields.io/badge/api-fabric-orange.svg)
 
+_..An Overly complicated Sound Mod..._
+
 ---
 
 This is the continuation of Huricaaan (Ha3)'s original mod, maintained and updated to the latest version of Minecraft. All previous features have been restored and some new ones added, with new development promised for the future on the opensource github profile!
