@@ -4,9 +4,32 @@
 ![License](https://img.shields.io/github/license/Sollace/Presence-Footsteps)
 ![](https://img.shields.io/badge/api-fabric-orange.svg)
 
-An overly complicated footstep sound enhancement mod for Minecraft.
+---
 
-Originally authored by Hurricaaane, now updated past Minecraft 1.15.2 by Sollace.
+This is the continuation of Huricaaan (Ha3)'s original mod, maintained and updated to the latest version of Minecraft. All previous features have been restored and some new ones added, with new development promised for the future on the opensource github profile!
+
+---
+
+Expect to see a more rich and immersive Minecraft world, one where Presence Footsteps adds new and more dynamic sounds for every block the player walks on. Every block has its own material assigned to it, and can make their own, customized sounds to better match what they're made of.
+
+---
+
+- Wooden chests are creaky and old,
+- stone is dusty and rough.
+- Piston heads sound like wood, whilst their bodies are stone,
+- even cake sounds like you might destroy if you step in the frosting!
+- Tall grass and bristles make a dry, rustling sound as you step through them,
+- Magma sounds like it's literally cooking your souls!
+
+---
+
+Not only that, but the latest version includes step sounds for certain non-block entities:
+
+---
+
+Shulkers make the same creaky box noises as Shulker boxes, boats sound like wood, and armour stands creak and produce a stone stepping sound as you walk on their stone slab base.
+
+ ---
 
 ## Sound Packs
 
