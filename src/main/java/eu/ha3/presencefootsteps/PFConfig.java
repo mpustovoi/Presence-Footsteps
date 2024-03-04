@@ -20,7 +20,7 @@ public class PFConfig extends JsonFile {
     private int wetSoundsVolume = 50;
     private int maxSteppingEntities = 50;
 
-    private String stance = "UNKNOWN";
+    private Locomotion stance = Locomotion.NONE;
 
     private boolean multiplayer = true;
 
@@ -53,7 +53,7 @@ public class PFConfig extends JsonFile {
     public Locomotion setLocomotion(Locomotion loco) {
 
         if (loco != getLocomotion()) {
-            stance = loco.name();
+            stance = loco;
             save();
 
             pf.getEngine().reload();
@@ -63,7 +63,7 @@ public class PFConfig extends JsonFile {
     }
 
     public Locomotion getLocomotion() {
-        return Locomotion.byName(stance);
+        return stance;
     }
 
     public EntitySelector getEntitySelector() {
@@ -169,7 +169,7 @@ public class PFConfig extends JsonFile {
 
     public void populateCrashReport(CrashReportSection section) {
         section.add("PF Global Volume", volume);
-        section.add("PF User's Selected Stance", stance + " (" + getLocomotion() + ")");
+        section.add("PF User's Selected Stance", stance);
         section.add("Enabled Global", global);
         section.add("Enabled Multiplayer", multiplayer);
     }
