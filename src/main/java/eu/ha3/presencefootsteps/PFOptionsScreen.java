@@ -152,12 +152,6 @@ class PFOptionsScreen extends GameGui {
             .setText("gui.done");
     }
 
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float partialTicks) {
-        renderBackground(context);
-        super.render(context, mouseX, mouseY, partialTicks);
-    }
-
     private void redrawUpdateButton(Button button) {
         Optional<Versions> versions = PresenceFootsteps.getInstance().getUpdateChecker().getNewer();
         boolean hasUpdate = versions.isPresent();
@@ -183,6 +177,7 @@ class PFOptionsScreen extends GameGui {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
+        renderBackground(context);
         super.render(context, mouseX, mouseY, tickDelta);
         content.render(context, mouseX, mouseY, tickDelta);
     }
