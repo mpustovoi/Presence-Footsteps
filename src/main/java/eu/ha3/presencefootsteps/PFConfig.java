@@ -138,7 +138,7 @@ public class PFConfig extends JsonFile {
     }
 
     public float setPassiveEntitiesVolume(float volume) {
-        hostileEntitiesVolume = volumeScaleToInt(volume);
+        passiveEntitiesVolume = volumeScaleToInt(volume);
         save();
         return getPassiveEntitiesVolume();
     }
