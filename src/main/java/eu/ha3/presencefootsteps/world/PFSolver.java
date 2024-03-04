@@ -14,6 +14,7 @@ import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Direction.Axis;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -32,8 +33,36 @@ public class PFSolver implements Solver {
 
     private final SoundEngine engine;
 
+    private boolean wasGolem = false;
+
     public PFSolver(SoundEngine engine) {
         this.engine = engine;
+    }
+
+    private BlockState getBlockStateAt(Entity entity, BlockPos pos) {
+        World world = entity.getWorld();
+        BlockState state = world.getBlockState(pos);
+
+        if (state.isAir() && (entity instanceof ContraptionCollidable collidable)) {
+            state = collidable.getCollidedStateAt(pos);
+        }
+        return state;
+    }
+
+    private Box getCollider(Entity player) {
+        Box collider = player.getBoundingBox();
+        // normalize to the bottom of the block
+        // so we can detect carpets on top of fences
+        collider = collider.offset(0, -(collider.minY - Math.floor(collider.minY)), 0);
+
+        double expansionRatio = 0.1;
+
+        // add buffer
+        collider = collider.expand(expansionRatio);
+        if (player.isSprinting()) {
+            collider = collider.expand(0.3, 0.5, 0.3);
+        }
+        return collider;
     }
 
     @Override
@@ -56,6 +85,28 @@ public class PFSolver implements Solver {
     }
 
     @Override
+    public Association findAssociation(LivingEntity ply, BlockPos pos, String strategy) {
+        if (!MESSY_FOLIAGE_STRATEGY.equals(strategy)) {
+            return Association.NOT_EMITTER;
+        }
+
+        BlockState above = getBlockStateAt(ply, pos.up());
+
+        String foliage = engine.getIsolator().blocks().getAssociation(above, Substrates.FOLIAGE);
+
+        if (!Emitter.isEmitter(foliage)) {
+            return Association.NOT_EMITTER;
+        }
+
+        // we discard the normal block association, and mark the foliage as detected
+        if (Emitter.MESSY_GROUND.equals(engine.getIsolator().blocks().getAssociation(above, Substrates.MESSY))) {
+            return new Association(above, pos.up()).withDry(foliage);
+        }
+
+        return Association.NOT_EMITTER;
+    }
+
+    @Override
     public Association findAssociation(LivingEntity ply, double verticalOffsetAsMinus, boolean isRightFoot) {
 
         double rot = Math.toRadians(MathHelper.wrapDegrees(ply.getYaw()));
@@ -72,41 +123,32 @@ public class PFSolver implements Solver {
             pos.z + Math.sin(rot) * feetDistanceToCenter
         );
 
-        if (feetDistanceToCenter > 1) {
-            for (BlockPos underfootPos : BlockPos.iterateOutwards(footPos, (int)feetDistanceToCenter, 2, (int)feetDistanceToCenter)) {
-                Association assos = findAssociation(ply, underfootPos);
-                if (assos.hasAssociation()) {
-                    return assos;
-                }
-            }
-        }
-
-        return findAssociation(ply, footPos);
-    }
-
-    private Association findAssociation(Entity player, BlockPos pos) {
-
-        if (!(player instanceof OtherClientPlayerEntity)) {
-            Vec3d vel = player.getVelocity();
+        if (!(ply instanceof OtherClientPlayerEntity)) {
+            Vec3d vel = ply.getVelocity();
 
             if (vel.lengthSquared() != 0 && Math.abs(vel.y) < 0.004) {
                 return Association.NOT_EMITTER; // Don't play sounds on every tiny bounce
             }
         }
 
-        Box collider = player.getBoundingBox();
-        // normalize to the bottom of the block
-        // so we can detect carpets on top of fences
-        collider = collider.offset(0, -(collider.minY - Math.floor(collider.minY)), 0);
+        Box collider = getCollider(ply);
 
-        double expansionRatio = 0.1;
+        BlockPos.Mutable mutableFootPos = footPos.mutableCopy();
 
-        // add buffer
-        collider = collider.expand(expansionRatio);
-        if (player.isSprinting()) {
-            collider = collider.expand(0.3, 0.5, 0.3);
+        if (feetDistanceToCenter > 1) {
+            for (BlockPos underfootPos : BlockPos.iterateOutwards(footPos, (int)feetDistanceToCenter, 2, (int)feetDistanceToCenter)) {
+                mutableFootPos.set(underfootPos);
+                Association assos = findAssociation(ply, collider, underfootPos, mutableFootPos);
+                if (assos.hasAssociation()) {
+                    return assos;
+                }
+            }
         }
 
+        return findAssociation(ply, collider, footPos, mutableFootPos);
+    }
+
+    private Association findAssociation(Entity player, Box collider, BlockPos originalFootPos, BlockPos.Mutable pos) {
         Association worked = findAssociation(player, pos, collider);
 
         // If it didn't work, the player has walked over the air on the border of a block.
@@ -120,6 +162,7 @@ public class PFSolver implements Solver {
             return worked;
         }
 
+        pos.set(originalFootPos);
         // Create a trigo. mark contained inside the block the player is over
         double xdang = (player.getX() - pos.getX()) * 2 - 1;
         double zdang = (player.getZ() - pos.getZ()) * 2 - 1;
@@ -146,11 +189,10 @@ public class PFSolver implements Solver {
         // | . |
         // < maxofX- maxofX+ >
         // Take the maximum border to produce the sound
-        if (isXdangMax) { // If we are in the positive border, add 1, else subtract 1
-            worked = findAssociation(player, pos.east(xdang > 0 ? 1 : -1), collider);
-        } else {
-            worked = findAssociation(player, pos.south(zdang > 0 ? 1 : -1), collider);
-        }
+            // If we are in the positive border, add 1, else subtract 1
+        worked = findAssociation(player, isXdangMax
+                ? pos.move(Direction.EAST, xdang > 0 ? 1 : -1)
+                : pos.move(Direction.SOUTH, zdang > 0 ? 1 : -1), collider);
 
         // If that didn't work, then maybe the footstep hit in the
         // direction of walking
@@ -159,75 +201,70 @@ public class PFSolver implements Solver {
             return worked;
         }
 
+        pos.set(originalFootPos);
         // Take the maximum direction and try with the orthogonal direction of it
-        if (isXdangMax) {
-            return findAssociation(player, pos.south(zdang > 0 ? 1 : -1), collider);
-        }
-
-        return findAssociation(player, pos.east(xdang > 0 ? 1 : -1), collider);
+        return findAssociation(player, isXdangMax
+                ? pos.move(Direction.SOUTH, zdang > 0 ? 1 : -1)
+                : pos.move(Direction.EAST, xdang > 0 ? 1 : -1), collider);
     }
 
-    private String findForGolem(World world, BlockPos pos, String substrate) {
-        List<Entity> golems = world.getEntitiesByClass(Entity.class, new Box(pos).expand(0.5, 0, 0.5), e -> !(e instanceof PlayerEntity));
+    private Association findAssociation(Entity entity, BlockPos.Mutable pos, Box collider) {
+        return findAssociation((p, state, substrate) -> {
+            List<Entity> golems = entity.getWorld().getEntitiesByClass(Entity.class, new Box(p).expand(0.5, 0, 0.5), e -> !(e instanceof PlayerEntity));
 
-        if (!golems.isEmpty()) {
-            String golem = engine.getIsolator().golems().getAssociation(golems.get(0).getType(), substrate);
+            if (!golems.isEmpty()) {
+                String golem = engine.getIsolator().golems().getAssociation(golems.get(0).getType(), substrate);
 
-            if (Emitter.isEmitter(golem)) {
-                LOGGER.debug("Golem detected: " + golem);
-
-                return golem;
+                if (Emitter.isEmitter(golem)) {
+                    LOGGER.debug("Golem detected: " + golem);
+                    wasGolem = true;
+                    return golem;
+                }
             }
-        }
 
-        return Emitter.UNASSIGNED;
+            if (state.isAir()) {
+                return Emitter.UNASSIGNED;
+            }
+
+            String association = engine.getIsolator().blocks().getAssociation(state, substrate);
+            if (Emitter.isResult(association)) {
+                return association;
+            }
+
+            BlockSoundGroup sounds = state.getSoundGroup();
+            substrate = String.format(Locale.ENGLISH, "%.2f_%.2f", sounds.volume, sounds.pitch);
+            return engine.getIsolator().primitives().getAssociation(sounds, substrate);
+        }, entity, pos, collider);
     }
 
-    private BlockState getBlockStateAt(Entity entity, BlockPos pos) {
-        World world = entity.getWorld();
-        BlockState state = world.getBlockState(pos);
-
-        if (state.isAir() && (entity instanceof ContraptionCollidable collidable)) {
-            state = collidable.getCollidedStateAt(pos);
-        }
-        return state;
-    }
-
-    private Association findAssociation(Entity entity, BlockPos pos, Box collider) {
+    private Association findAssociation(Associations associations, Entity entity, BlockPos.Mutable pos, Box collider) {
+        wasGolem = false;
         BlockState in = getBlockStateAt(entity, pos);
 
-        BlockPos up = pos.up();
-        BlockState above = getBlockStateAt(entity, up);
         // Try to see if the block above is a carpet...
-
-        String association = findForGolem(entity.getWorld(), up, Lookup.CARPET_SUBSTRATE);
-        boolean wasGolem = false;
-        String wetAssociation = Emitter.NOT_EMITTER;
-
-        if (!Emitter.isEmitter(association)) {
-            association = engine.getIsolator().blocks().getAssociation(above, Lookup.CARPET_SUBSTRATE);
-        } else {
-            wasGolem = true;
-        }
+        pos.move(Direction.UP);
+        boolean hasRain = entity.getWorld().hasRain(pos);
+        BlockState above = getBlockStateAt(entity, pos);
+        String association = associations.getAssociation(pos, above, Substrates.CARPET);
 
         if (Emitter.isEmitter(association)) {
             LOGGER.debug("Carpet detected: " + association);
-            pos = up;
             in = above;
         } else {
+            pos.move(Direction.DOWN);
             // This condition implies that if the carpet is NOT_EMITTER, solving will
             // CONTINUE with the actual block surface the player is walking on
-                              // check the height of the block. If it's something very short, like a carpet, also look through it
-            if (in.isAir() || in.getCollisionShape(entity.getWorld(), pos).getMax(Axis.Y) < 0.3F) {
-                BlockPos down = pos.down();
-                BlockState below = getBlockStateAt(entity, down);
+            if (in.isAir()) {
+                pos.move(Direction.DOWN);
+                BlockState below = getBlockStateAt(entity, pos);
 
-                association = engine.getIsolator().blocks().getAssociation(below, Lookup.FENCE_SUBSTRATE);
+                association = associations.getAssociation(pos, below, Substrates.FENCE);
 
                 if (Emitter.isResult(association)) {
                     LOGGER.debug("Fence detected: " + association);
-                    pos = down;
                     in = below;
+                } else {
+                    pos.move(Direction.UP);
                 }
             }
 
@@ -241,19 +278,14 @@ public class PFSolver implements Solver {
             }
 
             if (!Emitter.isResult(association)) {
-                association = findForGolem(entity.getWorld(), pos, Lookup.EMPTY_SUBSTRATE);
-
-                if (!Emitter.isEmitter(association)) {
-                    association = engine.getIsolator().blocks().getAssociation(in, Lookup.EMPTY_SUBSTRATE);
-                } else {
-                    wasGolem = true;
-                }
+                association = associations.getAssociation(pos, in, Substrates.DEFAULT);
             }
 
             if (Emitter.isEmitter(association)) {
                 // This condition implies that foliage over a NOT_EMITTER block CANNOT PLAY
                 // This block most not be executed if the association is a carpet
-                String foliage = engine.getIsolator().blocks().getAssociation(above, Lookup.FOLIAGE_SUBSTRATE);
+                String foliage = associations.getAssociation(pos.move(Direction.UP), above, Substrates.FOLIAGE);
+                pos.move(Direction.DOWN);
 
                 if (Emitter.isEmitter(foliage)) {
                     LOGGER.debug("Foliage detected: " + foliage);
@@ -262,12 +294,14 @@ public class PFSolver implements Solver {
             }
         }
 
-        if (Emitter.isEmitter(association) && (entity.getWorld().hasRain(up) || (!wasGolem && (in.getFluidState().isIn(FluidTags.WATER) || above.getFluidState().isIn(FluidTags.WATER))))) {
+        String wetAssociation = Emitter.NOT_EMITTER;
+
+        if (Emitter.isEmitter(association) && (hasRain || (!wasGolem && (in.getFluidState().isIn(FluidTags.WATER) || above.getFluidState().isIn(FluidTags.WATER))))) {
             // Only if the block is open to the sky during rain
             // or the block is submerged
             // or the block is waterlogged
             // then append the wet effect to footsteps
-            String wet = engine.getIsolator().blocks().getAssociation(in, Lookup.WET_SUBSTRATE);
+            String wet = associations.getAssociation(pos, in, Substrates.WET);
 
             if (Emitter.isEmitter(wet)) {
                 LOGGER.debug("Wet block detected: " + wet);
@@ -284,41 +318,7 @@ public class PFSolver implements Solver {
             return new Association(in, pos).withDry(association).withWet(wetAssociation);
         }
 
-        if (in.isAir()) {
-            return Association.NOT_EMITTER;
-        }
-
-        // Check for primitive in register
-        BlockSoundGroup sounds = in.getSoundGroup();
-        String substrate = String.format(Locale.ENGLISH, "%.2f_%.2f", sounds.volume, sounds.pitch);
-        String primitive = engine.getIsolator().primitives().getAssociation(sounds, substrate);
-
-        if (Emitter.isResult(primitive)) {
-            return new Association(in, pos).withDry(primitive).withWet(wetAssociation);
-        }
-
         return Association.NOT_EMITTER;
     }
 
-    @Override
-    public Association findAssociation(LivingEntity ply, BlockPos pos, String strategy) {
-        if (!MESSY_FOLIAGE_STRATEGY.equals(strategy)) {
-            return Association.NOT_EMITTER;
-        }
-
-        BlockState above = getBlockStateAt(ply, pos.up());
-
-        String foliage = engine.getIsolator().blocks().getAssociation(above, Lookup.FOLIAGE_SUBSTRATE);
-
-        if (!Emitter.isEmitter(foliage)) {
-            return Association.NOT_EMITTER;
-        }
-
-        // we discard the normal block association, and mark the foliage as detected
-        if (Emitter.MESSY_GROUND.equals(engine.getIsolator().blocks().getAssociation(above, Lookup.MESSY_SUBSTRATE))) {
-            return new Association(above, pos.up()).withDry(foliage);
-        }
-
-        return Association.NOT_EMITTER;
-    }
 }

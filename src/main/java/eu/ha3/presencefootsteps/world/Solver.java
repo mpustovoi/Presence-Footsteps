@@ -1,5 +1,6 @@
 package eu.ha3.presencefootsteps.world;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import eu.ha3.presencefootsteps.sound.State;
@@ -44,4 +45,8 @@ public interface Solver {
      * it, using a custom strategy which strategies are defined by the solver.
      */
     Association findAssociation(LivingEntity ply, BlockPos pos, String strategy);
+
+    interface Associations {
+        String getAssociation(BlockPos pos, BlockState state, String substrate);
+    }
 }
