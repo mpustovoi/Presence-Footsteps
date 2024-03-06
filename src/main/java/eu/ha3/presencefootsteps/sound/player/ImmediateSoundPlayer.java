@@ -14,6 +14,7 @@ import net.minecraft.util.Identifier;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
+import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.world.Association;
 
 /**
@@ -39,18 +40,32 @@ public class ImmediateSoundPlayer implements SoundPlayer, StepSoundPlayer {
 
     @SuppressWarnings("deprecation")
     @Override
-    public void playStep(Association assos) {
-        BlockSoundGroup soundType = assos.getSoundGroup();
-
-        if (!assos.getState().isLiquid() && soundType != null) {
-            BlockState beside = assos.getSource().getWorld().getBlockState(assos.getPos().up());
-
-            if (beside.getBlock() == Blocks.SNOW) {
-                soundType = Blocks.SNOW.getSoundGroup(beside);
-            }
-
-            playAttenuatedSound(assos.getSource(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch());
+    public boolean playStep(LivingEntity ply, Association assos, State eventType) {
+        if (!assos.isResult()) {
+            return false;
         }
+
+        if (!assos.isNotEmitter()) {
+            assos = assos.at(ply);
+
+            if (assos.hasAssociation()) {
+                engine.getIsolator().acoustics().playAcoustic(assos, eventType, Options.EMPTY);
+            } else {
+                BlockSoundGroup soundType = assos.getSoundGroup();
+
+                if (!assos.getState().isLiquid() && soundType != null) {
+                    BlockState beside = assos.getSource().getWorld().getBlockState(assos.getPos().up());
+
+                    if (beside.getBlock() == Blocks.SNOW) {
+                        soundType = Blocks.SNOW.getSoundGroup(beside);
+                    }
+
+                    playAttenuatedSound(assos.getSource(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch());
+                }
+            }
+        }
+
+        return true;
     }
 
     @Override

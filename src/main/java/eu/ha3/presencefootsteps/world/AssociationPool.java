@@ -1,0 +1,99 @@
+package eu.ha3.presencefootsteps.world;
+
+import java.util.Locale;
+
+import eu.ha3.presencefootsteps.api.DerivedBlock;
+import eu.ha3.presencefootsteps.sound.SoundEngine;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+
+/**
+ * Performs a search against all enabled lookups to match a block position, state, and substrate
+ * to acoustic association.
+ * <p>
+ * Priority is given to the golem lookup first.
+ * If no steppable entities are found, will check for a matching block state, and if no block state
+ * matches appear, will finally use the primitive map to look up a material based on block sound type.
+ */
+public final class AssociationPool {
+    private final LivingEntity entity;
+    private final SoundEngine engine;
+
+    private final Solver solver;
+
+    private boolean wasGolem;
+
+    public AssociationPool(LivingEntity entity, SoundEngine engine) {
+        this.entity = entity;
+        this.engine = engine;
+        this.solver = engine.getSolver();
+    }
+
+    /**
+     * Resets the lookup state for a new querying pass.
+     */
+    public void reset() {
+        wasGolem = false;
+    }
+
+    /**
+     * Returns true if any of the matches in the current pass came from the golem map.
+     * <p>
+     * Used to bypass wet sounds when walking on boats.
+     */
+    public boolean wasLastMatchGolem() {
+        return wasGolem;
+    }
+
+    public Association findAssociation(double verticalOffsetAsMinus, boolean isRightFoot) {
+        return solver.findAssociation(this, entity, verticalOffsetAsMinus, isRightFoot);
+    }
+
+    public Association findAssociation(BlockPos pos, String strategy) {
+        return solver.findAssociation(this, entity, pos, strategy);
+    }
+
+    /**
+     * Gets matching acoustic names for the supplied position, state, and substrate.
+     *
+     * @param pos           The block position being queried.
+     * @param state         The block state found at the queried position.
+     * @param substrate     The substrate corresponding to the stage of lookup being performed. One of the values in {@link Substrates}
+     * @return The matching acoustic names or {@link Emitter#UNASSIGNED} if no match could be determined.
+     */
+    public String get(BlockPos pos, BlockState state, String substrate) {
+        for (Entity golem : entity.getWorld().getOtherEntities(entity, new Box(pos).expand(0.5, 0, 0.5), e -> {
+            return !e.isCollidable() || e.getBoundingBox().maxY < entity.getY() + 0.2F;
+        })) {
+            String golemAssociation = engine.getIsolator().golems().getAssociation(golem.getType(), substrate);
+
+            if (Emitter.isEmitter(golemAssociation)) {
+                return golemAssociation;
+            }
+        }
+
+        if (state.isAir()) {
+            return Emitter.UNASSIGNED;
+        }
+
+        String association = engine.getIsolator().blocks().getAssociation(state, substrate);
+        if (Emitter.isResult(association)) {
+            return association;
+        }
+        BlockState baseState = DerivedBlock.getBaseOf(state);
+        if (!baseState.isAir()) {
+            association = engine.getIsolator().blocks().getAssociation(baseState, substrate);
+            if (Emitter.isResult(association)) {
+                return association;
+            }
+        }
+
+        BlockSoundGroup sounds = state.getSoundGroup();
+        substrate = String.format(Locale.ENGLISH, "%.2f_%.2f", sounds.volume, sounds.pitch);
+        return engine.getIsolator().primitives().getAssociation(sounds, substrate);
+    }
+}

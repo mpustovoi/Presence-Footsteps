@@ -25,7 +25,7 @@ public interface StepSoundSource {
 
             if (stepSoundGenerator == null || loco != locomotion) {
                 locomotion = loco;
-                stepSoundGenerator = loco.supplyGenerator(engine);
+                stepSoundGenerator = loco.supplyGenerator(entity, engine);
             }
             return stepSoundGenerator;
         }

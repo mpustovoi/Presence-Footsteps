@@ -1,7 +1,5 @@
 package eu.ha3.presencefootsteps.sound.generator;
 
-import net.minecraft.entity.LivingEntity;
-
 /**
  * Has the ability to generate footsteps based on a Player.
  *
@@ -16,7 +14,7 @@ public interface StepSoundGenerator {
     /**
      * Generate footsteps sounds of the Entity.
      */
-    boolean generateFootsteps(LivingEntity ply);
+    boolean generateFootsteps();
 
     /**
      * Checks whether the sound engine is engaged and doing something.

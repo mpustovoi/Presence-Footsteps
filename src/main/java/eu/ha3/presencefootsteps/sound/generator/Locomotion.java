@@ -2,21 +2,22 @@ package eu.ha3.presencefootsteps.sound.generator;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 
 public enum Locomotion {
     NONE,
-    BIPED(engine -> new TerrestrialStepSoundGenerator(engine, new Modifier<>())),
-    QUADRUPED(engine -> new TerrestrialStepSoundGenerator(engine, new QuadrupedModifier())),
-    FLYING(engine -> new WingedStepSoundGenerator(engine, new QuadrupedModifier())),
-    FLYING_BIPED(engine -> new WingedStepSoundGenerator(engine, new Modifier<>()));
+    BIPED((entity, engine) -> new TerrestrialStepSoundGenerator(entity, engine, new Modifier<>())),
+    QUADRUPED((entity, engine) -> new TerrestrialStepSoundGenerator(entity, engine, new QuadrupedModifier())),
+    FLYING((entity, engine) -> new WingedStepSoundGenerator(entity, engine, new QuadrupedModifier())),
+    FLYING_BIPED((entity, engine) -> new WingedStepSoundGenerator(entity, engine, new Modifier<>()));
 
     private static final Map<String, Locomotion> registry = new Object2ObjectOpenHashMap<>();
 
@@ -27,21 +28,21 @@ public enum Locomotion {
         }
     }
 
-    private final Function<SoundEngine, Optional<StepSoundGenerator>> constructor;
+    private final BiFunction<LivingEntity, SoundEngine, Optional<StepSoundGenerator>> constructor;
 
     private static final String AUTO_TRANSLATION_KEY = "menu.pf.stance.auto";
     private final String translationKey = "menu.pf.stance." + name().toLowerCase();
 
     Locomotion() {
-        constructor = engine -> Optional.empty();
+        constructor = (entity, engine) -> Optional.empty();
     }
 
-    Locomotion(Function<SoundEngine, StepSoundGenerator> gen) {
-        constructor = engine -> Optional.of(gen.apply(engine));
+    Locomotion(BiFunction<LivingEntity, SoundEngine, StepSoundGenerator> gen) {
+        constructor = (entity, engine) -> Optional.of(gen.apply(entity, engine));
     }
 
-    public Optional<StepSoundGenerator> supplyGenerator(SoundEngine engine) {
-        return constructor.apply(engine);
+    public Optional<StepSoundGenerator> supplyGenerator(LivingEntity entity, SoundEngine engine) {
+        return constructor.apply(entity, engine);
     }
 
     public Text getOptionName() {

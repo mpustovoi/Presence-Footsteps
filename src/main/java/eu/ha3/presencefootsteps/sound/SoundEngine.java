@@ -134,7 +134,7 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
             getTargets(cameraEntity).forEach(e -> {
                 try {
                     ((StepSoundSource) e).getStepGenerator(this).ifPresent(generator -> {
-                        if (generator.generateFootsteps((LivingEntity)e)) {
+                        if (generator.generateFootsteps()) {
                             ((IEntity) e).setNextStepDistance(Integer.MAX_VALUE);
                         } else if (((IEntity) e).getNextStepDistance() == Integer.MAX_VALUE) {
                             ((IEntity) e).setNextStepDistance(e.distanceTraveled + 1);
