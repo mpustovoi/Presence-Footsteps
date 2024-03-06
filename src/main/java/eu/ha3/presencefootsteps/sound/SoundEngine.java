@@ -95,8 +95,15 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
         }
     }
 
+    public boolean hasData() {
+        return hasConfigurations;
+    }
+
     public boolean isRunning(MinecraftClient client) {
-        return hasConfigurations && config.getEnabled() && (client.isInSingleplayer() || config.getEnabledMP());
+        return hasData()
+                && !client.isPaused()
+                && config.getEnabled()
+                && (client.isInSingleplayer() || config.getEnabledMP());
     }
 
     private Stream<? extends Entity> getTargets(final Entity cameraEntity) {
@@ -130,7 +137,7 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
     }
 
     public void onFrame(MinecraftClient client, Entity cameraEntity) {
-        if (!client.isPaused() && isRunning(client)) {
+        if (isRunning(client)) {
             getTargets(cameraEntity).forEach(e -> {
                 try {
                     ((StepSoundSource) e).getStepGenerator(this).ifPresent(generator -> {
@@ -198,7 +205,7 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
     }
 
     public void reloadEverything(ResourceManager manager) {
-        isolator = new Isolator(this);
+        shutdown();
         hasConfigurations = isolator.load(manager);
     }
 

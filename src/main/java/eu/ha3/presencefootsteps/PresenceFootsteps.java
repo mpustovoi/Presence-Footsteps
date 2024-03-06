@@ -103,14 +103,25 @@ public class PresenceFootsteps implements ClientModInitializer {
             }
 
             engine.onFrame(client, cameraEntity);
-            updater.attempt();
+
+            if (!FabricLoader.getInstance().isModLoaded("modmenu")) {
+                updater.attempt();
+            }
+
+            if (!engine.hasData() && config.isFirstRun()) {
+                config.setNotFirstRun();
+                MinecraftClient.getInstance().getToastManager().add(SystemToast.create(client, SystemToast.Type.PACK_LOAD_FAILURE,
+                        Text.translatable("key.presencefootsteps.settings"),
+                        Text.translatable("pf.default_sounds.missing", Text.translatable("pf.default_sounds.name"))
+                ));
+            }
         });
     }
 
     private void onUpdate(TargettedVersion newVersion, TargettedVersion currentVersion) {
         ToastManager manager = MinecraftClient.getInstance().getToastManager();
 
-        SystemToast.add(manager, SystemToast.Type.TUTORIAL_HINT,
+        SystemToast.add(manager, SystemToast.Type.PACK_LOAD_FAILURE,
                 Text.translatable("pf.update.title"),
                 Text.translatable("pf.update.text", newVersion.version().getFriendlyString(), newVersion.minecraft().getFriendlyString()));
     }

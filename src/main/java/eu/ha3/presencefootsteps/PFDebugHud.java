@@ -34,8 +34,8 @@ public class PFDebugHud {
         list.add("");
         list.add(Formatting.UNDERLINE + "Presence Footsteps " + FabricLoader.getInstance().getModContainer("presencefootsteps").get().getMetadata().getVersion());
 
-        PFConfig config = PresenceFootsteps.getInstance().getConfig();
-        list.add(String.format("Enabled: %s, Multiplayer: %s", config.getEnabled(), config.getEnabledMP()));
+        PFConfig config = engine.getConfig();
+        list.add(String.format("Enabled: %s, Multiplayer: %s, Running: %s", config.getEnabled(), config.getEnabledMP(), engine.isRunning(client)));
         list.add(String.format("Volume: Global: %s%%, W: %s%%, Entities[H: %s%%, P: %s%%], Players[U: %s%%, T: %s%% ]",
                 config.getGlobalVolume(),
                 config.getWetSoundsVolume(),
@@ -47,6 +47,12 @@ public class PFDebugHud {
         list.add(String.format("Stepping Mode: %s, Targeting Mode: %s", config.getLocomotion() == Locomotion.NONE
                 ? String.format("AUTO (%sDETECTED %s%s)", Formatting.BOLD, Locomotion.forPlayer(client.player, Locomotion.BIPED), Formatting.RESET)
                 : config.getLocomotion().toString(), config.getEntitySelector()));
+        list.add(String.format("Data Loaded: B%s P%s G%s",
+                engine.getIsolator().blocks().getSubstrates().size(),
+                engine.getIsolator().primitives().getSubstrates().size(),
+                engine.getIsolator().golems().getSubstrates().size()
+        ));
+        list.add(String.format("Has Resource Pack: %s%s", engine.hasData() ? Formatting.GREEN : Formatting.RED, engine.hasData()));
 
         insertAt(list, finalList, "Targeted Block: ", -1);
 

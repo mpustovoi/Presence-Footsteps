@@ -20,6 +20,8 @@ public class PFConfig extends JsonFile {
     private int wetSoundsVolume = 50;
     private int maxSteppingEntities = 50;
 
+    private boolean firstRun = true;
+
     private Locomotion stance = Locomotion.NONE;
 
     private boolean multiplayer = true;
@@ -60,6 +62,15 @@ public class PFConfig extends JsonFile {
         }
 
         return loco;
+    }
+
+    public boolean isFirstRun() {
+        return firstRun;
+    }
+
+    public void setNotFirstRun() {
+        firstRun = false;
+        save();
     }
 
     public Locomotion getLocomotion() {
