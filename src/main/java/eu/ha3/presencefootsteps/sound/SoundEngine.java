@@ -173,16 +173,16 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
 
         return event.getKeyOrValue().right().filter(sound -> {
             if (event == SoundEvents.ENTITY_PLAYER_SWIM
-                    || event == SoundEvents.ENTITY_PLAYER_SPLASH
-                    || event == SoundEvents.ENTITY_PLAYER_BIG_FALL
-                    || event == SoundEvents.ENTITY_PLAYER_SMALL_FALL) {
-                       return true;
-                   }
+                || event == SoundEvents.ENTITY_PLAYER_SPLASH
+                || event == SoundEvents.ENTITY_PLAYER_BIG_FALL
+                || event == SoundEvents.ENTITY_PLAYER_SMALL_FALL) {
+                return true;
+            }
 
-                   //String[] name = sound.getId().getPath().split("\\.");
-                   return false;//name.length > 0
-                          // && "block".contentEquals(name[0])
-                          // && "step".contentEquals(name[name.length - 1]);
+            String[] name = sound.getId().getPath().split("\\.");
+            return name.length > 0
+                    && "block".contentEquals(name[0])
+                    && "step".contentEquals(name[name.length - 1]);
         }).isPresent();
     }
 
