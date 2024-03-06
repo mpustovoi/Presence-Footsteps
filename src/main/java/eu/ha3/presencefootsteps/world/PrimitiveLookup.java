@@ -16,10 +16,17 @@ public class PrimitiveLookup extends AbstractSubstrateLookup<BlockSoundGroup> {
     @Override
     public void writeToReport(boolean full, JsonObjectWriter writer, Map<String, BlockSoundGroup> groups) throws IOException {
         writer.each(groups.values(), group -> {
-            String substrate = String.format(Locale.ENGLISH, "%.2f_%.2f", group.volume, group.pitch);
             if (full || !contains(group)) {
-                writer.field(group.getStepSound().getId().toString() + "@" + substrate, getAssociation(group, substrate));
+                writer.field(getKey(group), getAssociation(group, getSubstrate(group)));
             }
         });
+    }
+
+    public static String getSubstrate(BlockSoundGroup group) {
+        return String.format(Locale.ENGLISH, "%.2f_%.2f", group.volume, group.pitch);
+    }
+
+    public static String getKey(BlockSoundGroup group) {
+        return group.getStepSound().getId().toString() + "@" + getSubstrate(group);
     }
 }

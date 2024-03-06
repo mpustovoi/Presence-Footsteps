@@ -6,6 +6,7 @@ import eu.ha3.presencefootsteps.api.DerivedBlock;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
 import eu.ha3.presencefootsteps.world.Emitter;
+import eu.ha3.presencefootsteps.world.PrimitiveLookup;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -66,11 +67,7 @@ public class PFDebugHud {
             if (!base.isAir()) {
                 list.add(Registries.BLOCK.getId(base.getBlock()).toString());
             }
-            list.add(String.format(Locale.ENGLISH, "Primitive Key: %s@%.2f_%.2f",
-                    state.getSoundGroup().getStepSound().getId(),
-                    state.getSoundGroup().volume,
-                    state.getSoundGroup().pitch
-            ));
+            list.add(String.format(Locale.ENGLISH, "Primitive Key: %s", PrimitiveLookup.getKey(state.getSoundGroup())));
             boolean hasRain = client.world.hasRain(pos) || state.getFluidState().isIn(FluidTags.WATER) || client.world.getBlockState(pos.up()).getFluidState().isIn(FluidTags.WATER);
             list.add("Has Wet Sound: " + hasRain);
             renderSoundList("Step Sounds[B]", engine.getIsolator().blocks().getAssociations(state), list);

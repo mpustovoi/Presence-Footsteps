@@ -9,6 +9,7 @@
       "MAbstractBlock",
       "MStairsBlock",
       "MBlockSettings",
+      "MFabricBlockSettings",
       "IEntity",
       "ILivingEntity",
       "MClientPlayNetworkHandler",

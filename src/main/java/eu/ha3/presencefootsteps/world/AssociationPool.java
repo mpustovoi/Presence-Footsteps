@@ -1,7 +1,5 @@
 package eu.ha3.presencefootsteps.world;
 
-import java.util.Locale;
-
 import eu.ha3.presencefootsteps.api.DerivedBlock;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import net.minecraft.block.BlockState;
@@ -26,6 +24,7 @@ public final class AssociationPool {
     private final Solver solver;
 
     private boolean wasGolem;
+    private String association;
 
     public AssociationPool(LivingEntity entity, SoundEngine engine) {
         this.entity = entity;
@@ -69,31 +68,33 @@ public final class AssociationPool {
         for (Entity golem : entity.getWorld().getOtherEntities(entity, new Box(pos).expand(0.5, 0, 0.5), e -> {
             return !e.isCollidable() || e.getBoundingBox().maxY < entity.getY() + 0.2F;
         })) {
-            String golemAssociation = engine.getIsolator().golems().getAssociation(golem.getType(), substrate);
-
-            if (Emitter.isEmitter(golemAssociation)) {
-                return golemAssociation;
-            }
-        }
-
-        if (state.isAir()) {
-            return Emitter.UNASSIGNED;
-        }
-
-        String association = engine.getIsolator().blocks().getAssociation(state, substrate);
-        if (Emitter.isResult(association)) {
-            return association;
-        }
-        BlockState baseState = DerivedBlock.getBaseOf(state);
-        if (!baseState.isAir()) {
-            association = engine.getIsolator().blocks().getAssociation(baseState, substrate);
-            if (Emitter.isResult(association)) {
+            if (Emitter.isEmitter(association = engine.getIsolator().golems().getAssociation(golem.getType(), substrate))) {
                 return association;
             }
         }
 
+        BlockState baseState = DerivedBlock.getBaseOf(state);
+        if (!state.isAir() && (
+            getForState(state, substrate)
+            || (!baseState.isAir() && (
+                    getForState(baseState, substrate)
+                || (!Substrates.DEFAULT.equals(substrate) && getForState(baseState, Substrates.DEFAULT))
+                || getForPrimitive(baseState)
+            ))
+            || getForPrimitive(state)
+        )) {
+            return association;
+        }
+
+        return Emitter.UNASSIGNED;
+    }
+
+    private boolean getForState(BlockState state, String substrate) {
+        return Emitter.isResult(association = engine.getIsolator().blocks().getAssociation(state, substrate));
+    }
+
+    private boolean getForPrimitive(BlockState state) {
         BlockSoundGroup sounds = state.getSoundGroup();
-        substrate = String.format(Locale.ENGLISH, "%.2f_%.2f", sounds.volume, sounds.pitch);
-        return engine.getIsolator().primitives().getAssociation(sounds, substrate);
+        return Emitter.isResult(association = engine.getIsolator().primitives().getAssociation(sounds, PrimitiveLookup.getSubstrate(sounds)));
     }
 }
