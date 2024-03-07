@@ -80,7 +80,7 @@ public class PFDebugHud {
         if (client.crosshairTarget instanceof EntityHitResult ehr && ehr.getEntity() != null) {
             list.add(String.format("Targeted Entity Step Mode: %s", engine.getIsolator().locomotions().lookup(ehr.getEntity())));
             renderSoundList("Step Sounds[G]", engine.getIsolator().golems().getAssociations(ehr.getEntity().getType()), list);
-            insertAt(list, finalList, "Targeted Entity", 2);
+            insertAt(list, finalList, "Targeted Entity", 3);
         }
     }
 
@@ -91,11 +91,8 @@ public class PFDebugHud {
                 break;
             }
         }
-        if (i < destination.size()) {
-            destination.addAll(MathHelper.clamp(i + offset, 0, destination.size() - 1), values);
-        } else {
-            destination.addAll(values);
-        }
+
+        destination.addAll(MathHelper.clamp(i + offset, 0, destination.size()), values);
         values.clear();
     }
 
