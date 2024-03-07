@@ -325,6 +325,18 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     protected void playStep(Association association, State eventType) {
+
+        ItemStack boots = entity.getEquippedStack(EquipmentSlot.FEET);
+        if (boots.getItem() instanceof ArmorItem bootItem) {
+            String bootSound = engine.getIsolator().primitives().getAssociation(bootItem.getEquipSound(), Substrates.DEFAULT);
+            if (Emitter.isEmitter(bootSound)) {
+                engine.getIsolator().stepPlayer().playStep(association, eventType, Options.singular("volume_percentage", 0.5F));
+                engine.getIsolator().acoustics().playAcoustic(entity, bootSound, eventType, Options.EMPTY);
+
+                return;
+            }
+        }
+
         engine.getIsolator().stepPlayer().playStep(association, eventType, Options.EMPTY);
     }
 

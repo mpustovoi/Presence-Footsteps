@@ -5,12 +5,18 @@ import java.util.Locale;
 import java.util.Map;
 import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 
 public class PrimitiveLookup extends AbstractSubstrateLookup<BlockSoundGroup> {
     @Override
     protected Identifier getId(BlockSoundGroup key) {
         return key.getStepSound().getId();
+    }
+
+    public String getAssociation(SoundEvent key, String substrate) {
+        final Identifier id = key.getId();
+        return getSubstrateMap(id, substrate).getOrDefault(id, Emitter.UNASSIGNED);
     }
 
     @Override

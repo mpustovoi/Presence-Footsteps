@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
@@ -240,12 +241,14 @@ public class PFSolver implements Solver {
                 association = associations.get(pos, target, Substrates.DEFAULT);
             }
 
-            if (Emitter.isEmitter(association) && carpet.getCollisionShape(entity.getWorld(), pos).isEmpty()) {
-                // This condition implies that foliage over a NOT_EMITTER block CANNOT PLAY
-                // This block most not be executed if the association is a carpet
-                pos.move(Direction.UP);
-                association = Emitter.combine(association, associations.get(pos, carpet, Substrates.FOLIAGE));
-                pos.move(Direction.DOWN);
+            if (entity.getEquippedStack(EquipmentSlot.FEET).isEmpty() || entity.isSprinting()) {
+                if (Emitter.isEmitter(association) && carpet.getCollisionShape(entity.getWorld(), pos).isEmpty()) {
+                    // This condition implies that foliage over a NOT_EMITTER block CANNOT PLAY
+                    // This block most not be executed if the association is a carpet
+                    pos.move(Direction.UP);
+                    association = Emitter.combine(association, associations.get(pos, carpet, Substrates.FOLIAGE));
+                    pos.move(Direction.DOWN);
+                }
             }
         }
 

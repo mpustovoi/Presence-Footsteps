@@ -91,5 +91,13 @@
     "minecraft:block.hanging_sign.step": "bluntwood",
     "minecraft:block.cherry_wood_hanging_sign.step": "bluntwood",
     "minecraft:block.nether_wood_hanging_sign.step": "bluntwood,mushroom",
-    "minecraft:block.nether_wood.step": "wood,mushroom"
+    "minecraft:block.nether_wood.step": "wood,mushroom",
+
+    "item.armor.equip_generic": "boots",
+    "item.armor.equip_chain": "chainmail",
+    "item.armor.equip_gold": "metalboots",
+    "item.armor.equip_iron": "metalboots",
+    "item.armor.equip_leather": "boots",
+    "item.armor.equip_diamond": "metalboots",
+    "item.armor.equip_netherite": "heavyboots"
 }
