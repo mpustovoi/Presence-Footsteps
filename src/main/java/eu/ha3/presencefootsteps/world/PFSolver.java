@@ -218,6 +218,7 @@ public class PFSolver implements Solver {
                 BlockState fence = getBlockStateAt(entity, pos);
 
                 if (Emitter.isResult(association = associations.get(pos, fence, Substrates.FENCE))) {
+                    carpet = target;
                     target = fence;
                     // reference frame moved down by 1
                 } else {
