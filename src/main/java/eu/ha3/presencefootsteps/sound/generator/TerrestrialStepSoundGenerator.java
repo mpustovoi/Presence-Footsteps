@@ -2,6 +2,7 @@ package eu.ha3.presencefootsteps.sound.generator;
 
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
@@ -124,6 +125,10 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     protected void simulateFootsteps() {
+        if (!(entity instanceof PlayerEntity)) {
+            entity.distanceTraveled += (float)Math.sqrt(motionTracker.getHorizontalSpeed()) * 0.6f;
+        }
+
         final float distanceReference = entity.distanceTraveled;
 
         stepThisFrame = false;
