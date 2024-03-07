@@ -187,6 +187,12 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             if (event == null) {
                 event = motionTracker.pickState(entity, State.WALK, State.RUN);
             }
+
+            // Fix high speed footsteps (i.e. horse riding)
+            if (motionTracker.getHorizontalSpeed() > 0.1) {
+                distance *= 3;
+            }
+
             distance = modifier.reevaluateDistance(event, distance);
             // if the player is larger than normal, slow down footsteps further
 
