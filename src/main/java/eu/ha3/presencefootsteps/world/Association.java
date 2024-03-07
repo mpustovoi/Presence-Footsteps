@@ -2,60 +2,27 @@ package eu.ha3.presencefootsteps.world;
 
 import java.util.Objects;
 
-import org.jetbrains.annotations.Nullable;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.math.BlockPos;
 
-public final class Association {
-    public static final Association NOT_EMITTER = new Association();
+public record Association (
+        BlockState state,
+        BlockPos pos,
+        LivingEntity source,
 
-    private final BlockState blockState;
+        String acousticNames,
+        String wetAcousticNames
+) {
+    public static final Association NOT_EMITTER = new Association(Blocks.AIR.getDefaultState(), BlockPos.ORIGIN, null, Emitter.NOT_EMITTER, Emitter.NOT_EMITTER);
 
-    private final BlockPos pos;
-
-    private String data = Emitter.NOT_EMITTER;
-    private String wetData = Emitter.NOT_EMITTER;
-
-    private LivingEntity source;
-
-    public Association() {
-        this(Blocks.AIR.getDefaultState(), BlockPos.ORIGIN);
-    }
-
-    public Association(BlockState state, BlockPos pos) {
-        blockState = state;
-        this.pos = pos;
-    }
-
-    public Association at(LivingEntity source) {
-
-        if (!isNull()) {
-            this.source = source;
+    public static Association of(BlockState state, BlockPos pos, LivingEntity source, String dry, String wet) {
+        if (Emitter.isResult(dry) || Emitter.isResult(wet)) {
+            return new Association(state, pos, source, dry, wet);
         }
-
-        return this;
-    }
-
-    public Association withDry(@Nullable String data) {
-
-        if (!isNull() && data != null) {
-            this.data = data;
-        }
-
-        return this;
-    }
-
-    public Association withWet(@Nullable String data) {
-
-        if (!isNull() && data != null) {
-            this.wetData = data;
-        }
-
-        return this;
+        return NOT_EMITTER;
     }
 
     public boolean isNull() {
@@ -63,43 +30,22 @@ public final class Association {
     }
 
     public boolean isNotEmitter() {
-        return isNull() || (Emitter.isNonEmitter(data) && Emitter.isNonEmitter(wetData));
+        return isNull() || (Emitter.isNonEmitter(acousticNames) && Emitter.isNonEmitter(wetAcousticNames));
     }
 
     public boolean hasAssociation() {
         return !isNotEmitter() && isResult();
     }
 
+    public BlockSoundGroup soundGroup() {
+        return state.getSoundGroup();
+    }
 
     public boolean isResult() {
-        return Emitter.isResult(data) || Emitter.isResult(wetData);
-    }
-
-    public String getAcousticName() {
-        return data;
-    }
-
-    public String getWetAcousticName() {
-        return wetData;
-    }
-
-    public LivingEntity getSource() {
-        return source;
-    }
-
-    public BlockState getState() {
-        return blockState;
-    }
-
-    public BlockPos getPos() {
-        return pos;
-    }
-
-    public BlockSoundGroup getSoundGroup() {
-        return blockState.getSoundGroup();
+        return Emitter.isResult(acousticNames) || Emitter.isResult(wetAcousticNames);
     }
 
     public boolean dataEquals(Association other) {
-        return hasAssociation() && Objects.equals(data, other.data);
+        return hasAssociation() && Objects.equals(acousticNames, other.acousticNames);
     }
 }

@@ -325,7 +325,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     protected boolean playStep(Association association, State eventType) {
-        return engine.getIsolator().stepPlayer().playStep(entity, association, eventType);
+        return engine.getIsolator().stepPlayer().playStep(association, eventType);
     }
 
     protected void playSinglefoot(double verticalOffsetAsMinus, State eventType, boolean foot) {

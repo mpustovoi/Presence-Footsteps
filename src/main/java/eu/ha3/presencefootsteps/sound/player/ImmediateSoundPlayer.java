@@ -40,28 +40,23 @@ public class ImmediateSoundPlayer implements SoundPlayer, StepSoundPlayer {
 
     @SuppressWarnings("deprecation")
     @Override
-    public boolean playStep(LivingEntity ply, Association assos, State eventType) {
+    public boolean playStep(Association assos, State eventType) {
         if (!assos.isResult()) {
             return false;
         }
 
         if (!assos.isNotEmitter()) {
-            assos = assos.at(ply);
-
             if (assos.hasAssociation()) {
                 engine.getIsolator().acoustics().playAcoustic(assos, eventType, Options.EMPTY);
-            } else {
-                BlockSoundGroup soundType = assos.getSoundGroup();
+            } else if (!assos.state().isLiquid()) {
+                BlockSoundGroup soundType = assos.soundGroup();
+                BlockState above = assos.source().getWorld().getBlockState(assos.pos().up());
 
-                if (!assos.getState().isLiquid() && soundType != null) {
-                    BlockState beside = assos.getSource().getWorld().getBlockState(assos.getPos().up());
-
-                    if (beside.getBlock() == Blocks.SNOW) {
-                        soundType = Blocks.SNOW.getSoundGroup(beside);
-                    }
-
-                    playAttenuatedSound(assos.getSource(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch());
+                if (above.isOf(Blocks.SNOW)) {
+                    soundType = above.getSoundGroup();
                 }
+
+                playAttenuatedSound(assos.source(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch());
             }
         }
 

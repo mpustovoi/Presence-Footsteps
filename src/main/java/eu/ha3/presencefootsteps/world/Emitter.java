@@ -16,4 +16,11 @@ public interface Emitter {
     static boolean isEmitter(String association) {
         return isResult(association) && !isNonEmitter(association);
     }
+
+    static String combine(String a, String b) {
+        if (isEmitter(b)) {
+            return a + "," + b;
+        }
+        return a;
+    }
 }

@@ -66,18 +66,14 @@ public class PFSolver implements Solver {
         if (!MESSY_FOLIAGE_STRATEGY.equals(strategy)) {
             return Association.NOT_EMITTER;
         }
-
-        BlockState above = getBlockStateAt(ply, pos.up());
+        pos = pos.up();
+        BlockState above = getBlockStateAt(ply, pos);
 
         String foliage = engine.getIsolator().blocks().getAssociation(above, Substrates.FOLIAGE);
 
-        if (!Emitter.isEmitter(foliage)) {
-            return Association.NOT_EMITTER;
-        }
-
         // we discard the normal block association, and mark the foliage as detected
-        if (Emitter.MESSY_GROUND.equals(engine.getIsolator().blocks().getAssociation(above, Substrates.MESSY))) {
-            return new Association(above, pos.up()).withDry(foliage);
+        if (Emitter.isEmitter(foliage) && Emitter.MESSY_GROUND.equals(engine.getIsolator().blocks().getAssociation(above, Substrates.MESSY))) {
+            return Association.of(above, pos, ply, foliage, Emitter.NOT_EMITTER);
         }
 
         return Association.NOT_EMITTER;
@@ -139,7 +135,7 @@ public class PFSolver implements Solver {
         return assos;
     }
 
-    private Association findAssociation(AssociationPool associations, Entity player, Box collider, BlockPos originalFootPos, BlockPos.Mutable pos) {
+    private Association findAssociation(AssociationPool associations, LivingEntity player, Box collider, BlockPos originalFootPos, BlockPos.Mutable pos) {
         Association worked = findAssociation(associations, player, pos, collider);
 
         // If it didn't work, the player has walked over the air on the border of a block.
@@ -199,88 +195,77 @@ public class PFSolver implements Solver {
                 : pos.move(Direction.EAST, xdang > 0 ? 1 : -1), collider);
     }
 
-    private Association findAssociation(AssociationPool associations, Entity entity, BlockPos.Mutable pos, Box collider) {
+    private Association findAssociation(AssociationPool associations, LivingEntity entity, BlockPos.Mutable pos, Box collider) {
         associations.reset();
-        BlockState in = getBlockStateAt(entity, pos);
+        BlockState target = getBlockStateAt(entity, pos);
 
         // Try to see if the block above is a carpet...
         pos.move(Direction.UP);
-        boolean hasRain = entity.getWorld().hasRain(pos);
-        BlockState above = getBlockStateAt(entity, pos);
-        String association = associations.get(pos, above, Substrates.CARPET);
+        final boolean hasRain = entity.getWorld().hasRain(pos);
+        BlockState carpet = getBlockStateAt(entity, pos);
+        String association;
 
-        if (Emitter.isEmitter(association)) {
+        if (Emitter.isEmitter(association = associations.get(pos, carpet, Substrates.CARPET))) {
             LOGGER.debug("Carpet detected: " + association);
-            in = above;
+            target = carpet;
+            // reference frame moved up by 1
         } else {
             pos.move(Direction.DOWN);
             // This condition implies that if the carpet is NOT_EMITTER, solving will
             // CONTINUE with the actual block surface the player is walking on
-            if (in.isAir()) {
+            if (target.isAir()) {
                 pos.move(Direction.DOWN);
-                BlockState below = getBlockStateAt(entity, pos);
+                BlockState fence = getBlockStateAt(entity, pos);
 
-                association = associations.get(pos, below, Substrates.FENCE);
-
-                if (Emitter.isResult(association)) {
-                    LOGGER.debug("Fence detected: " + association);
-                    in = below;
+                if (Emitter.isResult(association = associations.get(pos, fence, Substrates.FENCE))) {
+                    target = fence;
+                    // reference frame moved down by 1
                 } else {
                     pos.move(Direction.UP);
                 }
             }
 
-            VoxelShape shape = in.getCollisionShape(entity.getWorld(), pos);
-            if (shape.isEmpty()) {
-                shape = in.getOutlineShape(entity.getWorld(), pos);
-            }
-            if (!shape.isEmpty() && !shape.getBoundingBox().offset(pos).intersects(collider)) {
-                LOGGER.debug("Skipping due to hitbox miss");
-                return Association.NOT_EMITTER;
+            if (!Emitter.isResult(association)) {
+                association = associations.get(pos, target, Substrates.DEFAULT);
             }
 
-            if (!Emitter.isResult(association)) {
-                association = associations.get(pos, in, Substrates.DEFAULT);
-            }
+
+            /*if (!checkCollision(entity.getWorld(), target, pos, collider)) {
+                association = Emitter.NOT_EMITTER;
+            }*/
 
             if (Emitter.isEmitter(association)) {
                 // This condition implies that foliage over a NOT_EMITTER block CANNOT PLAY
                 // This block most not be executed if the association is a carpet
-                String foliage = associations.get(pos.move(Direction.UP), above, Substrates.FOLIAGE);
+                pos.move(Direction.UP);
+                association = Emitter.combine(association, associations.get(pos, carpet, Substrates.FOLIAGE));
                 pos.move(Direction.DOWN);
-
-                if (Emitter.isEmitter(foliage)) {
-                    LOGGER.debug("Foliage detected: " + foliage);
-                    association += "," + foliage;
-                }
             }
         }
 
         String wetAssociation = Emitter.NOT_EMITTER;
 
-        if (Emitter.isEmitter(association) && (hasRain || (!associations.wasLastMatchGolem() && (in.getFluidState().isIn(FluidTags.WATER) || above.getFluidState().isIn(FluidTags.WATER))))) {
+        if (Emitter.isEmitter(association) && (hasRain
+                || (!associations.wasLastMatchGolem() && (
+                   target.getFluidState().isIn(FluidTags.WATER)
+                || carpet.getFluidState().isIn(FluidTags.WATER)
+        )))) {
             // Only if the block is open to the sky during rain
             // or the block is submerged
             // or the block is waterlogged
             // then append the wet effect to footsteps
-            String wet = associations.get(pos, in, Substrates.WET);
-
-            if (Emitter.isEmitter(wet)) {
-                LOGGER.debug("Wet block detected: " + wet);
-                wetAssociation = wet;
-            }
+            wetAssociation = associations.get(pos, target, Substrates.WET);
         }
 
         // Player has stepped on a non-emitter block as defined in the blockmap
-        if (Emitter.isNonEmitter(association) && Emitter.isNonEmitter(wetAssociation)) {
-            return Association.NOT_EMITTER;
-        }
-
-        if (Emitter.isResult(association)) {
-            return new Association(in, pos).withDry(association).withWet(wetAssociation);
-        }
-
-        return Association.NOT_EMITTER;
+        return Association.of(target, pos, entity, association, wetAssociation);
     }
 
+    private boolean checkCollision(World world, BlockState state, BlockPos pos, Box collider) {
+        VoxelShape shape = state.getCollisionShape(world, pos);
+        if (shape.isEmpty()) {
+            shape = state.getOutlineShape(world, pos);
+        }
+        return shape.isEmpty() || shape.getBoundingBox().offset(pos).intersects(collider);
+    }
 }
