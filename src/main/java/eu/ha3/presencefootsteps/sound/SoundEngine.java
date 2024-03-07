@@ -120,7 +120,8 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
                         && !((LivingEntity)e).isSleeping()
                         && (!(e instanceof PlayerEntity) || !e.isSpectator())
                         && e.squaredDistanceTo(cameraEntity) <= 256
-                        && config.getEntitySelector().test(e);
+                        && config.getEntitySelector().test(e)
+                        && (e == cameraEntity || !e.isConnectedThroughVehicle(cameraEntity));
         });
 
         final Comparator<Entity> nearest = Comparator.comparingDouble(e -> e.squaredDistanceTo(cameraEntity));
