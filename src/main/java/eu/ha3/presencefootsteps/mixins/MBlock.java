@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import eu.ha3.presencefootsteps.PresenceFootsteps;
 import eu.ha3.presencefootsteps.api.DerivedBlock;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.BlockState;
@@ -24,6 +25,9 @@ abstract class MAbstractBlock extends AbstractBlock implements DerivedBlock {
     @Override
     public BlockState getBaseBlockState() {
         Block baseBlock = ((DerivedBlock.Settings)settings).getBaseBlock();
+        if (baseBlock == null) {
+            baseBlock = PresenceFootsteps.getInstance().getEngine().getIsolator().heuristics().getMostSimilar((Block)(Object)this);
+        }
         return (baseBlock == null ? Blocks.AIR : baseBlock).getDefaultState();
     }
 }

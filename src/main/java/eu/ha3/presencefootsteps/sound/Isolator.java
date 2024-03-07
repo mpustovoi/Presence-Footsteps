@@ -15,6 +15,7 @@ import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import eu.ha3.presencefootsteps.util.ResourceUtils;
 import eu.ha3.presencefootsteps.util.BlockReport.Reportable;
 import eu.ha3.presencefootsteps.world.GolemLookup;
+import eu.ha3.presencefootsteps.world.HeuristicStateLookup;
 import eu.ha3.presencefootsteps.world.Index;
 import eu.ha3.presencefootsteps.world.LocomotionLookup;
 import eu.ha3.presencefootsteps.world.Lookup;
@@ -30,6 +31,7 @@ import net.minecraft.util.Identifier;
 public record Isolator (
         Variator variator,
         Index<Entity, Locomotion> locomotions,
+        HeuristicStateLookup heuristics,
         Lookup<EntityType<?>> golems,
         Lookup<BlockState> blocks,
         Lookup<BlockSoundGroup> primitives,
@@ -53,7 +55,7 @@ public record Isolator (
     }
 
     public Isolator(SoundEngine engine, SoundPlayer player, StepSoundPlayer stepPlayer) {
-        this(new Variator(), new LocomotionLookup(engine), new GolemLookup(), new StateLookup(), new PrimitiveLookup(), player, stepPlayer, new AcousticsPlayer(player));
+        this(new Variator(), new LocomotionLookup(engine), new HeuristicStateLookup(), new GolemLookup(), new StateLookup(), new PrimitiveLookup(), player, stepPlayer, new AcousticsPlayer(player));
     }
 
     public boolean load(ResourceManager manager) {
