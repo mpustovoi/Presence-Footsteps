@@ -22,9 +22,9 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
     }
 
     @Override
-    public boolean generateFootsteps() {
+    public void generateFootsteps() {
         lastTimeImmobile = timeImmobile;
-        return super.generateFootsteps();
+        super.generateFootsteps();
     }
 
     @Override

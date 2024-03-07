@@ -1,8 +1,11 @@
 package eu.ha3.presencefootsteps.sound.generator;
 
 import net.minecraft.client.network.OtherClientPlayerEntity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ArmorItem;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +17,9 @@ import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import eu.ha3.presencefootsteps.world.Association;
 import eu.ha3.presencefootsteps.world.AssociationPool;
+import eu.ha3.presencefootsteps.world.Emitter;
 import eu.ha3.presencefootsteps.world.Solver;
+import eu.ha3.presencefootsteps.world.Substrates;
 
 class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     // Footsteps
@@ -50,10 +55,6 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     protected final MotionTracker motionTracker = new MotionTracker(this);
     protected final AssociationPool associations;
 
-    private boolean playedSound;
-
-    private int ticksInactive;
-
     public TerrestrialStepSoundGenerator(LivingEntity entity, SoundEngine engine, Modifier<TerrestrialStepSoundGenerator> modifier) {
         this.entity = entity;
         this.engine = engine;
@@ -62,30 +63,18 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     @Override
-    public boolean isInactive() {
-        return ticksInactive > 23;
-    }
-
-    @Override
     public MotionTracker getMotionTracker() {
         return motionTracker;
     }
 
     @Override
-    public boolean generateFootsteps() {
+    public void generateFootsteps() {
         motionTracker.simulateMotionData(entity);
-        playedSound = motionTracker.isStationary();
         simulateFootsteps();
         simulateAirborne();
         simulateBrushes();
         simulateStationary();
-        if (!playedSound) {
-            ticksInactive++;
-        } else {
-            ticksInactive = 0;
-        }
         lastFallDistance = entity.fallDistance;
-        return !isInactive();
     }
 
     protected void simulateStationary() {
@@ -93,7 +82,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             Association assos = associations.findAssociation(0d, isRightFoot);
 
             if (assos.hasAssociation() || !isImmobile) {
-                playedSound |= playStep(assos, State.STAND);
+                playStep(assos, State.STAND);
             }
         }
     }
@@ -146,7 +135,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             scalStat = !scalStat;
 
             if (scalStat && engine.getIsolator().variator().PLAY_WANDER && !hasStoppingConditions()) {
-                playedSound |= playStep(associations.findAssociation(0, isRightFoot), State.WANDER);
+                playStep(associations.findAssociation(0, isRightFoot), State.WANDER);
             }
         }
         xMovec = movX;
@@ -229,10 +218,10 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
             engine.getIsolator().acoustics().playAcoustic(entity, "_SWIM", state, options);
 
-            playedSound |= playStep(associations.findAssociation(entity.getBlockPos().down(), Solver.MESSY_FOLIAGE_STRATEGY), event);
+            playStep(associations.findAssociation(entity.getBlockPos().down(), Solver.MESSY_FOLIAGE_STRATEGY), event);
         } else {
             if (!entity.isSneaky() || event.isExtraLoud()) {
-                playedSound |= playStep(associations.findAssociation(verticalOffsetAsMinus, isRightFoot), event);
+                playStep(associations.findAssociation(verticalOffsetAsMinus, isRightFoot), event);
             }
             isRightFoot = !isRightFoot;
         }
@@ -315,7 +304,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
         brushesTime = System.currentTimeMillis() + 100;
 
-        if (motionTracker.isStationary() || entity.isSneaking()) {
+        if (motionTracker.isStationary() || entity.isSneaking() || !entity.getEquippedStack(EquipmentSlot.FEET).isEmpty()) {
             return;
         }
 
@@ -328,15 +317,15 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         if (!assos.isNull()) {
             if (!isMessyFoliage) {
                 isMessyFoliage = true;
-                playedSound |= playStep(assos, State.WALK);
+                playStep(assos, State.WALK);
             }
         } else if (isMessyFoliage) {
             isMessyFoliage = false;
         }
     }
 
-    protected boolean playStep(Association association, State eventType) {
-        return engine.getIsolator().stepPlayer().playStep(association, eventType);
+    protected void playStep(Association association, State eventType) {
+        engine.getIsolator().stepPlayer().playStep(association, eventType, Options.EMPTY);
     }
 
     protected void playSinglefoot(double verticalOffsetAsMinus, State eventType, boolean foot) {
@@ -346,7 +335,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             assos = associations.findAssociation(verticalOffsetAsMinus + 1, isRightFoot);
         }
 
-        playedSound |= playStep(assos, eventType);
+        playStep(assos, eventType);
     }
 
     protected void playMultifoot(double verticalOffsetAsMinus, State eventType) {
@@ -363,7 +352,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             }
         }
 
-        playedSound |= playStep(leftFoot, eventType);
-        playedSound |= playStep(rightFoot, eventType);
+        playStep(leftFoot, eventType);
+        playStep(rightFoot, eventType);
     }
 }

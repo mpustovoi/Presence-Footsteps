@@ -50,7 +50,6 @@ public interface Options {
             return other;
         }
         return new Options() {
-
             @Override
             public boolean containsKey(String o) {
                 return other.containsKey(o) || self.containsKey(o);

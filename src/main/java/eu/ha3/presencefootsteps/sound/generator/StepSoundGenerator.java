@@ -14,10 +14,5 @@ public interface StepSoundGenerator {
     /**
      * Generate footsteps sounds of the Entity.
      */
-    boolean generateFootsteps();
-
-    /**
-     * Checks whether the sound engine is engaged and doing something.
-     */
-    boolean isInactive();
+    void generateFootsteps();
 }
