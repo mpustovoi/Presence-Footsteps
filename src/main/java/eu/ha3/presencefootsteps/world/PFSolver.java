@@ -61,6 +61,14 @@ public class PFSolver implements Solver {
         return collider;
     }
 
+    private boolean checkCollision(World world, BlockState state, BlockPos pos, Box collider) {
+        VoxelShape shape = state.getCollisionShape(world, pos);
+        if (shape.isEmpty()) {
+            shape = state.getOutlineShape(world, pos);
+        }
+        return shape.isEmpty() || shape.getBoundingBox().offset(pos).intersects(collider);
+    }
+
     @Override
     public Association findAssociation(AssociationPool associations, LivingEntity ply, BlockPos pos, String strategy) {
         if (!MESSY_FOLIAGE_STRATEGY.equals(strategy)) {
@@ -203,9 +211,11 @@ public class PFSolver implements Solver {
         pos.move(Direction.UP);
         final boolean hasRain = entity.getWorld().hasRain(pos);
         BlockState carpet = getBlockStateAt(entity, pos);
-        String association;
+        VoxelShape shape = carpet.getCollisionShape(entity.getWorld(), pos);
+        boolean isValidCarpet = !shape.isEmpty() && (shape.getMax(Axis.Y) < 0.2F && shape.getMax(Axis.Y) < collider.getMin(Axis.Y) + 0.1F);
+        String association = Emitter.UNASSIGNED;
 
-        if (Emitter.isEmitter(association = associations.get(pos, carpet, Substrates.CARPET))) {
+        if (isValidCarpet && Emitter.isEmitter(association = associations.get(pos, carpet, Substrates.CARPET))) {
             LOGGER.debug("Carpet detected: " + association);
             target = carpet;
             // reference frame moved up by 1
@@ -230,18 +240,18 @@ public class PFSolver implements Solver {
                 association = associations.get(pos, target, Substrates.DEFAULT);
             }
 
-
-            /*if (!checkCollision(entity.getWorld(), target, pos, collider)) {
-                association = Emitter.NOT_EMITTER;
-            }*/
-
-            if (Emitter.isEmitter(association)) {
+            if (Emitter.isEmitter(association) && carpet.getCollisionShape(entity.getWorld(), pos).isEmpty()) {
                 // This condition implies that foliage over a NOT_EMITTER block CANNOT PLAY
                 // This block most not be executed if the association is a carpet
                 pos.move(Direction.UP);
                 association = Emitter.combine(association, associations.get(pos, carpet, Substrates.FOLIAGE));
                 pos.move(Direction.DOWN);
             }
+        }
+
+        // Check collision against small blocks
+        if (!checkCollision(entity.getWorld(), target, pos, collider)) {
+            association = Emitter.NOT_EMITTER;
         }
 
         String wetAssociation = Emitter.NOT_EMITTER;
@@ -260,13 +270,5 @@ public class PFSolver implements Solver {
 
         // Player has stepped on a non-emitter block as defined in the blockmap
         return Association.of(target, pos, entity, association, wetAssociation);
-    }
-
-    private boolean checkCollision(World world, BlockState state, BlockPos pos, Box collider) {
-        VoxelShape shape = state.getCollisionShape(world, pos);
-        if (shape.isEmpty()) {
-            shape = state.getOutlineShape(world, pos);
-        }
-        return shape.isEmpty() || shape.getBoundingBox().offset(pos).intersects(collider);
     }
 }
