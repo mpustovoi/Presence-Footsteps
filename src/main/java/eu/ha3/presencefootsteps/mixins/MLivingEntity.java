@@ -18,4 +18,8 @@ abstract class MLivingEntity extends Entity implements StepSoundSource {
     public Optional<StepSoundGenerator> getStepGenerator(SoundEngine engine) {
         return stepSoundSource.getStepGenerator(engine);
     }
+    @Override
+    public boolean isStepBlocked() {
+        return stepSoundSource.isStepBlocked();
+    }
 }

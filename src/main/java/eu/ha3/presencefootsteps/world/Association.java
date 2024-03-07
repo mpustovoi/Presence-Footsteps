@@ -20,7 +20,7 @@ public record Association (
 
     public static Association of(BlockState state, BlockPos pos, LivingEntity source, String dry, String wet) {
         if (Emitter.isResult(dry) || Emitter.isResult(wet)) {
-            return new Association(state, pos, source, dry, wet);
+            return new Association(state, pos.toImmutable(), source, dry, wet);
         }
         return NOT_EMITTER;
     }

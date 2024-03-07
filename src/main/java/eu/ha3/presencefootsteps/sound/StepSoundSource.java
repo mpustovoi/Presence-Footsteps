@@ -2,12 +2,15 @@ package eu.ha3.presencefootsteps.sound;
 
 import java.util.Optional;
 
+import eu.ha3.presencefootsteps.PresenceFootsteps;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
 import eu.ha3.presencefootsteps.sound.generator.StepSoundGenerator;
 import net.minecraft.entity.LivingEntity;
 
 public interface StepSoundSource {
     Optional<StepSoundGenerator> getStepGenerator(SoundEngine engine);
+
+    boolean isStepBlocked();
 
     final class Container implements StepSoundSource {
         private Locomotion locomotion;
@@ -28,6 +31,11 @@ public interface StepSoundSource {
                 stepSoundGenerator = loco.supplyGenerator(entity, engine);
             }
             return stepSoundGenerator;
+        }
+
+        @Override
+        public boolean isStepBlocked() {
+            return PresenceFootsteps.getInstance().getEngine().isEnabledFor(entity);
         }
     }
 }
