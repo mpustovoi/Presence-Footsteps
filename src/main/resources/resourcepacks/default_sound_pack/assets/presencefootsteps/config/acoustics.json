@@ -1360,6 +1360,54 @@
         "vol_max": 7
       }
     },
+    "metalgrate": {
+      "walk": {
+        "name": "metalbar.metalbar_walk",
+        "pitch": 30,
+        "vol": 80
+      },
+      "wander": {
+        "type": "simultaneous",
+        "array": [
+          "marble.marble_wander",
+          {
+            "type": "probability",
+            "array": [
+              4,
+              {
+                "name": "metalbar.metalbar_wander",
+                "pitch": 30,
+                "vol_min": 10,
+                "vol_max": 50
+              },
+              7,
+              "@"
+            ]
+          }
+        ]
+      },
+      "jump": {
+        "name": "metalbar.metalbar_wander",
+        "pitch": 1.5
+      },
+      "land": {
+        "type": "simultaneous",
+        "array": [
+          {
+            "name": "metalbar.metalbar_walk",
+            "pitch": 30,
+            "vol": 80
+          },
+          {
+            "type": "delayed",
+            "delay": 30,
+            "name": "metalbar.metalbar_walk",
+            "pitch": 30,
+            "vol": 80
+          }
+        ]
+      }
+    },
     "metalbar": {
       "walk": "metalbar.metalbar_walk",
       "wander": {

@@ -92,6 +92,13 @@
     "minecraft:block.cherry_wood_hanging_sign.step": "bluntwood",
     "minecraft:block.nether_wood_hanging_sign.step": "bluntwood,mushroom",
     "minecraft:block.nether_wood.step": "wood,mushroom",
+    "minecraft:block.sponge.step": "organic",
+    "minecraft:block.wet_sponge.step": "mud",
+    "minecraft:block.trial_spawner.step": "metalbar",
+    "minecraft:block.copper_grate.step": "metalgrate",
+    "minecraft:block.copper_bulb.step": "glass",
+    "minecraft:block.polished_tuff.step": "marble",
+    "minecraft:block.tuff_bricks.step": "brickstone",
 
     "item.armor.equip_generic": "boots",
     "item.armor.equip_chain": "chainmail",
