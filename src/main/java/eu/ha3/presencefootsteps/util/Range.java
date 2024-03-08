@@ -1,8 +1,12 @@
 package eu.ha3.presencefootsteps.util;
 
+import java.io.IOException;
 import java.util.Random;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import net.minecraft.util.math.MathHelper;
 
 public record Range (float min, float max) {
     public static final Range DEFAULT = exactly(1);
@@ -12,14 +16,35 @@ public record Range (float min, float max) {
     }
 
     public Range read(String name, JsonObject json) {
+        if ("volume".equals(name) && json.has("vol") || json.has("vol_min") || json.has("vol_max")) {
+            return read("vol", json);
+        }
         if (json.has(name)) {
+            JsonElement element = json.get(name);
+            if (element.isJsonObject()) {
+                return new Range(
+                    getPercentage(element.getAsJsonObject(), "min", min),
+                    getPercentage(element.getAsJsonObject(), "max", max)
+                );
+            }
             return exactly(getPercentage(json, name, min));
         }
 
         return new Range(
-                getPercentage(json, name + "_min", this.min),
-                getPercentage(json, name + "_max", this.max)
+                getPercentage(json, name + "_min", min),
+                getPercentage(json, name + "_max", max)
         );
+    }
+
+    public void write(JsonObjectWriter writer) throws IOException {
+        if (MathHelper.approximatelyEquals(min, max)) {
+            writer.writer().value(min * 100);
+        } else {
+            writer.object(() -> {
+                writer.field("min", min * 100);
+                writer.field("max", max * 100);
+            });
+        }
     }
 
     public float random(Random rand) {

@@ -1,5 +1,6 @@
 package eu.ha3.presencefootsteps.sound.acoustics;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -11,6 +12,7 @@ import com.google.gson.JsonParseException;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.entity.LivingEntity;
@@ -69,6 +71,8 @@ public interface Acoustic {
         }
         return t;
     }
+
+    void write(AcousticsFile context, JsonObjectWriter writer) throws IOException;
 
     /**
      * Plays a sound.

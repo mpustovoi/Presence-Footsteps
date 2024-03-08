@@ -1,5 +1,6 @@
 package eu.ha3.presencefootsteps.util;
 
+import java.io.IOException;
 import java.util.Random;
 
 import com.google.gson.JsonObject;
@@ -35,6 +36,17 @@ public record Period(long min, long max) implements Options {
 
     public float on(float value) {
         return MathUtil.between(min, max, value);
+    }
+
+    public void write(JsonObjectWriter writer) throws IOException {
+        if (min == max) {
+            writer.writer().value(min);
+        } else {
+            writer.object(() -> {
+                writer.field("min", min);
+                writer.field("max", max);
+            });
+        }
     }
 
     @Override

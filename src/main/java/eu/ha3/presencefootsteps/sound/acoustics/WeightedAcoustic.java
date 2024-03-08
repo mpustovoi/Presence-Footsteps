@@ -1,15 +1,16 @@
 package eu.ha3.presencefootsteps.sound.acoustics;
 
-import com.google.gson.JsonArray;
+import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectImmutableList;
 import net.minecraft.entity.LivingEntity;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -22,64 +23,72 @@ import java.util.List;
  *
  */
 record WeightedAcoustic(
-        List<Acoustic> theAcoustics,
-        float[] probabilityThresholds
+        Entry[] entries
 ) implements Acoustic {
     static final Serializer FACTORY = Serializer.ofJsObject((json, context) -> {
-        List<Integer> weights = new ObjectArrayList<>();
-        List<Acoustic> acoustics = new ObjectArrayList<>();
-
-        JsonArray sim = json.getAsJsonArray("array");
-        Iterator<JsonElement> iter = sim.iterator();
-
+        List<Entry> entries = new ObjectArrayList<>();
+        Iterator<JsonElement> iter = json.getAsJsonArray(json.has("array") ? "array" : "entries").iterator();
         while (iter.hasNext()) {
-            weights.add(iter.next().getAsInt());
+            int weight = iter.next().getAsInt();
 
             if (!iter.hasNext()) {
                 throw new JsonParseException("Probability has odd number of children!");
             }
 
-            acoustics.add(Acoustic.read(context, iter.next()));
+            entries.add(new Entry(weight, Acoustic.read(context, iter.next())));
         }
 
-        return of(acoustics, weights);
+        return new WeightedAcoustic(entries.toArray(Entry[]::new));
     });
 
-    public static WeightedAcoustic of(List<Acoustic> acoustics, List<Integer> weights) {
-        List<Acoustic> theAcoustics = new ObjectArrayList<>(acoustics);
-        float[] probabilityThresholds = new float[acoustics.size() - 1];
-
+    WeightedAcoustic {
         float total = 0;
-        for (int i = 0; i < weights.size(); i++) {
-            if (weights.get(i) < 0) {
-                throw new IllegalArgumentException("A probability weight can't be negative");
-            }
-
-            total = total + weights.get(i);
+        for (Entry entry : entries) {
+            Preconditions.checkArgument(entry.weight >= 0, "A probability weight can't be negative");
+            total += entry.weight;
+        }
+        if (total < 0) {
+            Preconditions.checkArgument(total >= 0, "A probability weight can't be negative");
         }
 
-        for (int i = 0; i < weights.size() - 1; i++) {
-            probabilityThresholds[i] = weights.get(i) / total;
+        for (Entry entry : entries) {
+            entry.threshold = entry.weight / total;
         }
-
-        return new WeightedAcoustic(theAcoustics, probabilityThresholds);
-    }
-
-
-
-    public WeightedAcoustic {
-        theAcoustics = new ObjectImmutableList<>(theAcoustics);
     }
 
     @Override
     public void playSound(SoundPlayer player, LivingEntity location, State event, Options inputOptions) {
-        float rand = player.getRNG().nextFloat();
-
-        int marker = 0;
-        while (marker < probabilityThresholds.length && probabilityThresholds[marker] < rand) {
-            marker++;
+        final float rand = player.getRNG().nextFloat();
+        int marker = -1;
+        while (++marker < entries.length) {
+            if (entries[marker].threshold >= rand) {
+                entries[marker].acoustic.playSound(player, location, event, inputOptions);
+                return;
+            }
         }
+    }
 
-        theAcoustics.get(marker).playSound(player, location, event, inputOptions);
+    @Override
+    public void write(AcousticsFile context, JsonObjectWriter writer) throws IOException {
+        writer.object(() -> {
+            writer.field("type", "probability");
+            writer.array("entries", () -> {
+                for (Entry entry : entries) {
+                    writer.writer().value(entry.weight);
+                    entry.acoustic.write(context, writer);
+                }
+            });
+        });
+    }
+
+    private static class Entry {
+        private final Acoustic acoustic;
+        private final int weight;
+        private float threshold;
+
+        Entry(int weight, Acoustic acoustic) {
+            this.weight = weight;
+            this.acoustic = acoustic;
+        }
     }
 }

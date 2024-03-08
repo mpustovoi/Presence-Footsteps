@@ -1,9 +1,12 @@
 package eu.ha3.presencefootsteps.sound.acoustics;
 
+import java.io.IOException;
+
 import com.google.gson.JsonObject;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import eu.ha3.presencefootsteps.util.Range;
 import net.minecraft.entity.LivingEntity;
 
@@ -26,21 +29,22 @@ record VaryingAcoustic(
             );
         }
         JsonObject jso = json.getAsJsonObject();
+        if (!jso.has("name")) {
+            return EmptyAcoustic.INSTANCE;
+        }
+        String name = jso.get("name").getAsString();
+        if (name.isEmpty()) {
+            return EmptyAcoustic.INSTANCE;
+        }
         return new VaryingAcoustic(
-                context.getSoundName(jso.get("name").getAsString()),
-                context.defaultVolume().read("vol", jso),
+                context.getSoundName(name),
+                context.defaultVolume().read("volume", jso),
                 context.defaultPitch().read("pitch", jso)
         );
     };
 
     @Override
     public void playSound(SoundPlayer player, LivingEntity location, State event, Options inputOptions) {
-        playSound(soundName, volume, pitch, Options.EMPTY, player, location, inputOptions);
-    }
-
-    // shared code between VaryingAcoustic & DelayedAcoustic since
-    // in the old implementation DelayedAcoustic extended VaryingAcoustic
-    static void playSound(String soundName, Range volume, Range pitch, Options options, SoundPlayer player, LivingEntity location, Options inputOptions) {
         if (soundName.isEmpty()) {
             // Special case for intentionally empty sounds (as opposed to fall back sounds)
             return;
@@ -54,6 +58,28 @@ record VaryingAcoustic(
                 ? pitch.on(inputOptions.get("gliding_pitch"))
                 : pitch.random(player.getRNG());
 
-        player.playSound(location, soundName, finalVolume, finalPitch, options.and(inputOptions));
+        player.playSound(location, soundName, finalVolume, finalPitch, inputOptions);
+    }
+
+    @Override
+    public void write(AcousticsFile context, JsonObjectWriter writer) throws IOException {
+        boolean hasVolume = !volume.equals(context.defaultVolume());
+        boolean hasPitch = !pitch.equals(context.defaultPitch());
+        if (hasVolume || hasPitch) {
+            writer.object(() -> {
+                if (soundName != null && !soundName.isEmpty()) {
+                    writer.field("type", "basic");
+                    writer.field("name", !context.soundRoot().isEmpty() && soundName.startsWith(context.soundRoot()) ? soundName.replace(context.soundRoot(), "") : "@" + soundName);
+                    if (hasVolume) {
+                        writer.field("volume", () -> volume.write(writer));
+                    }
+                    if (hasPitch) {
+                        writer.field("pitch", () -> pitch.write(writer));
+                    }
+                }
+            });
+        } else {
+            writer.writer().value(!context.soundRoot().isEmpty() && soundName.startsWith(context.soundRoot()) ? soundName.replace(context.soundRoot(), "") : "@" + soundName);
+        }
     }
 }
