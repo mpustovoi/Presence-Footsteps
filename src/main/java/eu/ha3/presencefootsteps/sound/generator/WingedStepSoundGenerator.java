@@ -17,30 +17,30 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
     private long lastTimeImmobile;
     protected long nextFlapTime;
 
-    public WingedStepSoundGenerator(SoundEngine engine, Modifier<TerrestrialStepSoundGenerator> modifier) {
-        super(engine, modifier);
+    public WingedStepSoundGenerator(LivingEntity entity, SoundEngine engine, Modifier<TerrestrialStepSoundGenerator> modifier) {
+        super(entity, engine, modifier);
     }
 
     @Override
-    public boolean generateFootsteps(LivingEntity ply) {
+    public void generateFootsteps() {
         lastTimeImmobile = timeImmobile;
-        return super.generateFootsteps(ply);
+        super.generateFootsteps();
     }
 
     @Override
-    protected void simulateAirborne(LivingEntity ply) {
+    protected void simulateAirborne() {
         isFalling = motionTracker.getMotionY() < -0.3;
-        super.simulateAirborne(ply);
+        super.simulateAirborne();
         if (isAirborne) {
-            simulateFlying(ply);
+            simulateFlying();
         }
     }
 
     @Override
-    protected boolean updateImmobileState(LivingEntity ply, float reference) {
+    protected boolean updateImmobileState(float reference) {
 
         if (isAirborne) {
-            final Vec3d vel = ply.getVelocity();
+            final Vec3d vel = entity.getVelocity();
 
             boolean stationary = vel.x != 0 && vel.z != 0;
             lastReference = reference;
@@ -55,7 +55,7 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
             return false;
         }
 
-        return super.updateImmobileState(ply, reference);
+        return super.updateImmobileState(reference);
     }
 
     protected int getWingSpeed() {
@@ -72,8 +72,8 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
     }
 
     @Override
-    protected void simulateJumpingLanding(LivingEntity ply) {
-        if (hasStoppingConditions(ply)) {
+    protected void simulateJumpingLanding() {
+        if (hasStoppingConditions()) {
             return;
         }
 
@@ -93,30 +93,30 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
             if (!isAirborne) {
                 float volume = speedingJumpStateChange ? 2
                         : MathUtil.scalex(lastFallDistance, variator.HUGEFALL_LANDING_DISTANCE_MIN, variator.HUGEFALL_LANDING_DISTANCE_MAX);
-                engine.getIsolator().acoustics().playAcoustic(ply, "_SWIFT", State.LAND, Options.singular("gliding_volume", volume));
+                engine.getIsolator().acoustics().playAcoustic(entity, "_SWIFT", State.LAND, Options.singular("gliding_volume", volume));
             } else {
-                engine.getIsolator().acoustics().playAcoustic(ply, "_SWIFT", State.JUMP, Options.EMPTY);
+                engine.getIsolator().acoustics().playAcoustic(entity, "_SWIFT", State.JUMP, Options.EMPTY);
             }
         }
 
-        if (isAirborne && isJumping(ply)) {
-            simulateJumping(ply);
+        if (isAirborne && isJumping()) {
+            simulateJumping();
         } else if (!isAirborne && hugeLanding) {
-            simulateLanding(ply);
+            simulateLanding();
         }
     }
 
-    protected void simulateFlying(LivingEntity ply) {
+    protected void simulateFlying() {
         final long now = System.currentTimeMillis();
         Variator variator = engine.getIsolator().variator();
 
-        if (updateState(motionTracker.getHorizontalSpeed(), motionTracker.getMotionY(), ply.sidewaysSpeed)) {
+        if (updateState(motionTracker.getHorizontalSpeed(), motionTracker.getMotionY(), entity.sidewaysSpeed)) {
             nextFlapTime = now + variator.FLIGHT_TRANSITION_TIME;
         }
 
-        if (!ply.isSubmergedInWater() && !isFalling && now > nextFlapTime) {
-            nextFlapTime = now + getWingSpeed() + (ply.getWorld().random.nextInt(100) - 50);
-            flapMod = (flapMod + 1) % (1 + ply.getWorld().random.nextInt(4));
+        if (!entity.isSubmergedInWater() && !isFalling && now > nextFlapTime) {
+            nextFlapTime = now + getWingSpeed() + (entity.getWorld().random.nextInt(100) - 50);
+            flapMod = (flapMod + 1) % (1 + entity.getWorld().random.nextInt(4));
 
             float volume = 1;
             long diffImmobile = now - lastTimeImmobile;
@@ -127,7 +127,7 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
                         variator.WING_IMMOBILE_FADE_START + variator.WING_IMMOBILE_FADE_DURATION);
             }
 
-            engine.getIsolator().acoustics().playAcoustic(ply, "_WING", State.WALK, Options.singular("gliding_volume", volume));
+            engine.getIsolator().acoustics().playAcoustic(entity, "_WING", State.WALK, Options.singular("gliding_volume", volume));
         }
     }
 

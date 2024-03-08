@@ -9,13 +9,6 @@ import java.util.Set;
 import eu.ha3.presencefootsteps.util.BlockReport.Reportable;
 
 public interface Lookup<T> extends Loadable, Reportable {
-    String EMPTY_SUBSTRATE = "";
-    String CARPET_SUBSTRATE = "carpet";
-    String WET_SUBSTRATE = "wet";
-    String FENCE_SUBSTRATE = "bigger";
-    String FOLIAGE_SUBSTRATE = "foliage";
-    String MESSY_SUBSTRATE = "messy";
-
     /**
      * This will return the appropriate association for the given state and substrate.
      *

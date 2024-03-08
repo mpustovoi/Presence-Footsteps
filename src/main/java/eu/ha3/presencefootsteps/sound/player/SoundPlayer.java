@@ -16,5 +16,5 @@ public interface SoundPlayer {
      */
     Random getRNG();
 
-    void think();
+    default void think() { }
 }

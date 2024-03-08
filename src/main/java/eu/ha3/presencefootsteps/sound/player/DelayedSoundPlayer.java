@@ -55,6 +55,7 @@ class DelayedSoundPlayer implements SoundPlayer {
         private final LivingEntity location;
 
         private final String soundName;
+        private final Options options;
 
         private final float volume;
         private final float pitch;
@@ -67,7 +68,7 @@ class DelayedSoundPlayer implements SoundPlayer {
             this.soundName = soundName;
             this.volume = volume;
             this.pitch = pitch;
-
+            this.options = options;
             maximum = options.containsKey("skippable") ? -1L : (long)options.get("delay_max");
             timeToPlay = System.currentTimeMillis() + Math.max(MathUtil.randAB(getRNG(),
                     (long)options.get("delay_min"),
@@ -78,7 +79,7 @@ class DelayedSoundPlayer implements SoundPlayer {
         public boolean tick() {
             switch (nextState(currentTime)) {
                 case PLAYING:
-                    immediate.playSound(location, soundName, volume, pitch, Options.EMPTY);
+                    immediate.playSound(location, soundName, volume, pitch, options);
                     return false;
                 case SKIPPING:
                     return true;

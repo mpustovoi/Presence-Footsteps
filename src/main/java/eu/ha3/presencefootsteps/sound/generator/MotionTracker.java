@@ -5,6 +5,7 @@ import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 
 public class MotionTracker {
@@ -87,12 +88,14 @@ public class MotionTracker {
     }
 
     public State pickState(LivingEntity ply, State walk, State run) {
-        if (!PlayerUtil.isClientPlayer(ply)) {
-            // Other players don't send motion data, so have to decide some other way
-            if (ply.isSprinting()) {
-                return run;
+        if (ply instanceof PlayerEntity) {
+            if (!PlayerUtil.isClientPlayer(ply)) {
+                // Other players don't send motion data, so have to decide some other way
+                if (ply.isSprinting()) {
+                    return run;
+                }
+                return walk;
             }
-            return walk;
         }
         return getHorizontalSpeed() > generator.engine.getIsolator().variator().SPEED_TO_RUN ? run : walk;
     }
