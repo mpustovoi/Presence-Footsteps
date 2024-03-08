@@ -168,7 +168,7 @@ class PFOptionsScreen extends GameGui {
                     BlockReport.execute((full, writer, groups) -> {
                         ResourceUtils.forEach(Isolator.ACOUSTICS, client.getResourceManager(), reader -> {
                             Map<String, Acoustic> acoustics = new HashMap<>();
-                            AcousticsFile file = AcousticsFile.read(reader, acoustics::put);
+                            AcousticsFile file = AcousticsFile.read(reader, acoustics::put, true);
                             if (file != null) {
                                 try {
                                     file.write(writer, acoustics);

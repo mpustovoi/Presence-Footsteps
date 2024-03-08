@@ -27,6 +27,7 @@ record DelayedAcoustic(
     public void write(AcousticsFile context, JsonObjectWriter writer) throws IOException {
         writer.object(() -> {
             writer.field("type", "delayed");
+            writer.field("delay", () -> delay.write(writer));
             writer.field("acoustic", () -> acoustic.write(context, writer));
         });
     }

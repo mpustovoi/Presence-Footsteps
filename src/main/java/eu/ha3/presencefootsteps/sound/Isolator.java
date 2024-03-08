@@ -64,7 +64,7 @@ public record Isolator (
         hasConfigurations |= ResourceUtils.forEach(GOLEM_MAP, manager, golems()::load);
         hasConfigurations |= ResourceUtils.forEach(PRIMITIVE_MAP, manager, primitives()::load);
         hasConfigurations |= ResourceUtils.forEach(LOCOMOTION_MAP, manager, locomotions()::load);
-        hasConfigurations |= ResourceUtils.forEach(ACOUSTICS, manager, reader -> AcousticsFile.read(reader, acoustics()::addAcoustic));
+        hasConfigurations |= ResourceUtils.forEach(ACOUSTICS, manager, reader -> AcousticsFile.read(reader, acoustics()::addAcoustic, false));
         hasConfigurations |= ResourceUtils.forEach(VARIATOR, manager, variator()::load);
         return hasConfigurations;
     }

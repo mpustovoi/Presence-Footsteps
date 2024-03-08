@@ -16,6 +16,9 @@ public record Range (float min, float max) {
     }
 
     public Range read(String name, JsonObject json) {
+        if ("volume".equals(name) && json.has("vol") || json.has("vol_min") || json.has("vol_max")) {
+            return read("vol", json);
+        }
         if (json.has(name)) {
             JsonElement element = json.get(name);
             if (element.isJsonObject()) {
@@ -35,11 +38,11 @@ public record Range (float min, float max) {
 
     public void write(JsonObjectWriter writer) throws IOException {
         if (MathHelper.approximatelyEquals(min, max)) {
-            writer.writer().value(min);
+            writer.writer().value(min * 100);
         } else {
             writer.object(() -> {
-                writer.field("min", min);
-                writer.field("max", max);
+                writer.field("min", min * 100);
+                writer.field("max", max * 100);
             });
         }
     }

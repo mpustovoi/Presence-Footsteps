@@ -28,10 +28,10 @@ public record AcousticsFile (
     private static final int ENGINE_VERSION = 2;
 
     @Nullable
-    public static AcousticsFile read(Reader reader, BiConsumer<String, Acoustic> consumer) {
+    public static AcousticsFile read(Reader reader, BiConsumer<String, Acoustic> consumer, boolean ignoreVersion) {
         try {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-            AcousticsFile context = read(json);
+            AcousticsFile context = read(json, ignoreVersion);
             json.getAsJsonObject("contents").entrySet().forEach(element -> {
                 consumer.accept(element.getKey(), Acoustic.read(context, element.getValue(), "events"));
             });
@@ -42,9 +42,9 @@ public record AcousticsFile (
         return null;
     }
 
-    private static AcousticsFile read(JsonObject json) {
+    private static AcousticsFile read(JsonObject json, boolean ignoreVersion) {
         expect("library".equals(json.get("type").getAsString()), "Invalid type: Expected \"library\" got \"" + json.get("type").getAsString() + "\"");
-        expect(json.get("engineversion").getAsInt() == ENGINE_VERSION, "Unrecognised Engine version: " + ENGINE_VERSION + " expected, got " + json.get("engineversion").getAsInt());
+        expect(ignoreVersion || json.get("engineversion").getAsInt() == ENGINE_VERSION, "Unrecognised Engine version: " + ENGINE_VERSION + " expected, got " + json.get("engineversion").getAsInt());
         expect(json.has("contents"), "Empty contents");
 
         String soundRoot = "";

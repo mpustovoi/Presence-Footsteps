@@ -63,16 +63,13 @@ record VaryingAcoustic(
 
     @Override
     public void write(AcousticsFile context, JsonObjectWriter writer) throws IOException {
-        boolean hasVolume = volume.equals(context.defaultVolume());
-        boolean hasPitch = pitch.equals(context.defaultPitch());
+        boolean hasVolume = !volume.equals(context.defaultVolume());
+        boolean hasPitch = !pitch.equals(context.defaultPitch());
         if (hasVolume || hasPitch) {
             writer.object(() -> {
                 if (soundName != null && !soundName.isEmpty()) {
                     writer.field("type", "basic");
-                    writer.field("name", !context.soundRoot().isEmpty() && soundName.startsWith(context.soundRoot())
-                            ? soundName.replace(context.soundRoot(), "")
-                            : "@" + soundName
-                    );
+                    writer.field("name", !context.soundRoot().isEmpty() && soundName.startsWith(context.soundRoot()) ? soundName.replace(context.soundRoot(), "") : "@" + soundName);
                     if (hasVolume) {
                         writer.field("volume", () -> volume.write(writer));
                     }
@@ -82,7 +79,7 @@ record VaryingAcoustic(
                 }
             });
         } else {
-            writer.writer().value(soundName);
+            writer.writer().value(!context.soundRoot().isEmpty() && soundName.startsWith(context.soundRoot()) ? soundName.replace(context.soundRoot(), "") : "@" + soundName);
         }
     }
 }

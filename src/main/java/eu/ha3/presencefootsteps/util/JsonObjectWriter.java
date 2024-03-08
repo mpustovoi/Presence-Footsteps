@@ -23,6 +23,11 @@ public interface JsonObjectWriter extends AutoCloseable {
         writer().value(data);
     }
 
+    default void field(String name, long data) throws IOException {
+        writer().name(name);
+        writer().value(data);
+    }
+
     default void field(String name, float data) throws IOException {
         writer().name(name);
         writer().value(data);
