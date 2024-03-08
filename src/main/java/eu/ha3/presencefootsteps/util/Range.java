@@ -16,7 +16,7 @@ public record Range (float min, float max) {
     }
 
     public Range read(String name, JsonObject json) {
-        if ("volume".equals(name) && json.has("vol") || json.has("vol_min") || json.has("vol_max")) {
+        if ("volume".equals(name) && (json.has("vol") || json.has("vol_min") || json.has("vol_max"))) {
             return read("vol", json);
         }
         if (json.has(name)) {
