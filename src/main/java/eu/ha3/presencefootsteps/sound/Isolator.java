@@ -43,7 +43,7 @@ public record Isolator (
     private static final Identifier GOLEM_MAP = new Identifier("presencefootsteps", "config/golemmap.json");
     private static final Identifier LOCOMOTION_MAP = new Identifier("presencefootsteps", "config/locomotionmap.json");
     private static final Identifier PRIMITIVE_MAP = new Identifier("presencefootsteps", "config/primitivemap.json");
-    private static final Identifier ACOUSTICS = new Identifier("presencefootsteps", "config/acoustics.json");
+    public static final Identifier ACOUSTICS = new Identifier("presencefootsteps", "config/acoustics.json");
     private static final Identifier VARIATOR = new Identifier("presencefootsteps", "config/variator.json");
 
     public Isolator(SoundEngine engine) {
@@ -64,7 +64,7 @@ public record Isolator (
         hasConfigurations |= ResourceUtils.forEach(GOLEM_MAP, manager, golems()::load);
         hasConfigurations |= ResourceUtils.forEach(PRIMITIVE_MAP, manager, primitives()::load);
         hasConfigurations |= ResourceUtils.forEach(LOCOMOTION_MAP, manager, locomotions()::load);
-        hasConfigurations |= ResourceUtils.forEach(ACOUSTICS, manager, reader -> AcousticsFile.read(reader, acoustics()::addAcoustic));
+        hasConfigurations |= ResourceUtils.forEach(ACOUSTICS, manager, reader -> AcousticsFile.read(reader, acoustics()::addAcoustic, false));
         hasConfigurations |= ResourceUtils.forEach(VARIATOR, manager, variator()::load);
         return hasConfigurations;
     }

@@ -47,6 +47,7 @@
 	"menu.pf.stance.flying_biped.tooltip": "Avian emulates a 2-legged walking mode with wings",
 	"menu.pf.report.full": "Full report",
 	"menu.pf.report.concise": "Concise report",
+	"menu.pf.report.acoustics": "Dump Acoustics",
 	"menu.pf.group.volume": "Volume",
 	"menu.pf.group.footsteps": "Footsteps",
 	"menu.pf.group.debugging": "Debugging",
