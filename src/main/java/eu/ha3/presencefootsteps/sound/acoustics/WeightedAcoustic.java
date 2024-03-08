@@ -60,7 +60,7 @@ record WeightedAcoustic(
             total = total + weights.get(i);
         }
 
-        for (int i = 0; i < weights.size() - 1; i++) {
+        for (int i = 0; i < weights.size(); i++) {
             probabilityThresholds[i] = weights.get(i) / total;
         }
 
