@@ -43,7 +43,7 @@ public record Isolator (
     private static final Identifier GOLEM_MAP = new Identifier("presencefootsteps", "config/golemmap.json");
     private static final Identifier LOCOMOTION_MAP = new Identifier("presencefootsteps", "config/locomotionmap.json");
     private static final Identifier PRIMITIVE_MAP = new Identifier("presencefootsteps", "config/primitivemap.json");
-    private static final Identifier ACOUSTICS = new Identifier("presencefootsteps", "config/acoustics.json");
+    public static final Identifier ACOUSTICS = new Identifier("presencefootsteps", "config/acoustics.json");
     private static final Identifier VARIATOR = new Identifier("presencefootsteps", "config/variator.json");
 
     public Isolator(SoundEngine engine) {

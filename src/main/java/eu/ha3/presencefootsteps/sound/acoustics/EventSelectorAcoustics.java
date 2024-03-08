@@ -3,8 +3,10 @@ package eu.ha3.presencefootsteps.sound.acoustics;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import net.minecraft.entity.LivingEntity;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
@@ -31,5 +33,15 @@ record EventSelectorAcoustics(Map<State, Acoustic> pairs) implements Acoustic {
             playSound(player, location, event.getTransitionDestination(), inputOptions);
             // the possibility of a resonance cascade scenario is extremely unlikely
         }
+    }
+
+    @Override
+    public void write(AcousticsFile context, JsonObjectWriter writer) throws IOException {
+        writer.object(() -> {
+            writer.field("type", "events");
+            writer.each(pairs.entrySet(), pair -> {
+                writer.field(pair.getKey().getName(), () -> pair.getValue().write(context, writer));
+            });
+        });
     }
 }

@@ -1,5 +1,8 @@
 package eu.ha3.presencefootsteps;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -18,7 +21,11 @@ import com.minelittlepony.common.client.gui.element.Toggle;
 
 import eu.ha3.mc.quick.update.Versions;
 import eu.ha3.presencefootsteps.config.VolumeOption;
+import eu.ha3.presencefootsteps.sound.Isolator;
+import eu.ha3.presencefootsteps.sound.acoustics.Acoustic;
+import eu.ha3.presencefootsteps.sound.acoustics.AcousticsFile;
 import eu.ha3.presencefootsteps.util.BlockReport;
+import eu.ha3.presencefootsteps.util.ResourceUtils;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.pack.PackScreen;
@@ -154,6 +161,27 @@ class PFOptionsScreen extends GameGui {
             .setEnabled(client.world != null)
             .getStyle()
                 .setText("menu.pf.report.full");
+
+        content.addButton(new Button(wideLeft, row += 25, 150, 20)
+                .onClick(sender -> {
+                    sender.setEnabled(false);
+                    BlockReport.execute((full, writer, groups) -> {
+                        ResourceUtils.forEach(Isolator.ACOUSTICS, client.getResourceManager(), reader -> {
+                            Map<String, Acoustic> acoustics = new HashMap<>();
+                            AcousticsFile file = AcousticsFile.read(reader, acoustics::put);
+                            if (file != null) {
+                                try {
+                                    file.write(writer, acoustics);
+                                } catch (IOException e) {
+                                    PresenceFootsteps.logger.error("Error whilst exporting acoustics", e);
+                                }
+                            }
+                        });
+                    }, "acoustics", true).thenRun(() -> sender.setEnabled(true));
+                }))
+                .setEnabled(client.world != null)
+                .getStyle()
+                    .setText("menu.pf.report.acoustics");
 
         addButton(new Button(left, height - 25)
             .onClick(sender -> finish())).getStyle()

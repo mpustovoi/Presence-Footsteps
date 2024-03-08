@@ -6,10 +6,12 @@ import com.google.gson.JsonParseException;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
+import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList;
 import net.minecraft.entity.LivingEntity;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -47,7 +49,7 @@ record WeightedAcoustic(
 
     public static WeightedAcoustic of(List<Acoustic> acoustics, List<Integer> weights) {
         List<Acoustic> theAcoustics = new ObjectArrayList<>(acoustics);
-        float[] probabilityThresholds = new float[acoustics.size() - 1];
+        float[] probabilityThresholds = new float[acoustics.size()];
 
         float total = 0;
         for (int i = 0; i < weights.size(); i++) {
@@ -65,8 +67,6 @@ record WeightedAcoustic(
         return new WeightedAcoustic(theAcoustics, probabilityThresholds);
     }
 
-
-
     public WeightedAcoustic {
         theAcoustics = new ObjectImmutableList<>(theAcoustics);
     }
@@ -81,5 +81,22 @@ record WeightedAcoustic(
         }
 
         theAcoustics.get(marker).playSound(player, location, event, inputOptions);
+    }
+
+    @Override
+    public void write(AcousticsFile context, JsonObjectWriter writer) throws IOException {
+        writer.object(() -> {
+            writer.field("type", "probability");
+            writer.array("array", () -> {
+                try {
+                for (int i = 0; i < theAcoustics.size(); i++) {
+                    writer.writer().value(probabilityThresholds[i]);
+                    theAcoustics.get(i).write(context, writer);
+                }
+                } catch (Throwable t) {
+                    throw t;
+                }
+            });
+        });
     }
 }
