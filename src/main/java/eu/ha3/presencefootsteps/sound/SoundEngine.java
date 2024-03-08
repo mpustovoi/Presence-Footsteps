@@ -58,14 +58,14 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
 
         if (source instanceof PlayerEntity) {
             if (PlayerUtil.isClientPlayer(source)) {
-                volume *= config.getClientPlayerVolume() / 100F;
+                volume *= config.clientPlayerVolume.getPercentage();
             } else {
-                volume *= config.getOtherPlayerVolume() / 100F;
+                volume *= config.otherPlayerVolume.getPercentage();
             }
         } else if (source instanceof HostileEntity) {
-            volume *= config.getHostileEntitiesVolume() / 100F;
+            volume *= config.hostileEntitiesVolume.getPercentage();
         } else {
-            volume *= config.getPassiveEntitiesVolume() / 100F;
+            volume *= config.passiveEntitiesVolume.getPercentage();
         }
 
         float runningProgress = ((StepSoundSource) source).getStepGenerator(this)

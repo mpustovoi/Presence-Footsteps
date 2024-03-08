@@ -11,5 +11,5 @@ public interface StepSoundPlayer {
     /**
      * Play a step sound from a block
      */
-    boolean playStep(Association assos, State eventType, Options options);
+    void playStep(Association assos, State eventType, Options options);
 }

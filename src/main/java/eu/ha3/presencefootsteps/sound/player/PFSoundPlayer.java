@@ -35,27 +35,23 @@ public class PFSoundPlayer implements SoundPlayer, StepSoundPlayer {
 
     @SuppressWarnings("deprecation")
     @Override
-    public boolean playStep(Association assos, State eventType, Options options) {
-        if (!assos.isResult()) {
-            return false;
+    public void playStep(Association assos, State eventType, Options options) {
+        if (assos.isNotEmitter()) {
+            return;
         }
 
-        if (!assos.isNotEmitter()) {
-            if (assos.hasAssociation()) {
-                engine.getIsolator().acoustics().playAcoustic(assos, eventType, options);
-            } else if (!assos.state().isLiquid()) {
-                BlockSoundGroup soundType = assos.soundGroup();
-                BlockState above = assos.source().getWorld().getBlockState(assos.pos().up());
+        if (assos.hasAssociation()) {
+            engine.getIsolator().acoustics().playAcoustic(assos, eventType, options);
+        } else if (!assos.state().isLiquid()) {
+            BlockSoundGroup soundType = assos.soundGroup();
+            BlockState above = assos.source().getWorld().getBlockState(assos.pos().up());
 
-                if (above.isOf(Blocks.SNOW)) {
-                    soundType = above.getSoundGroup();
-                }
-
-                immediatePlayer.playSound(assos.source(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch(), options);
+            if (above.isOf(Blocks.SNOW)) {
+                soundType = above.getSoundGroup();
             }
-        }
 
-        return true;
+            immediatePlayer.playSound(assos.source(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch(), options);
+        }
     }
 
     @Override

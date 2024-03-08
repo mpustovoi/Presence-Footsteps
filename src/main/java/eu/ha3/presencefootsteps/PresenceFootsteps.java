@@ -22,17 +22,21 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.toast.SystemToast;
-import net.minecraft.client.toast.ToastManager;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 public class PresenceFootsteps implements ClientModInitializer {
     public static final Logger logger = LogManager.getLogger("PFSolver");
 
     private static final String MODID = "presencefootsteps";
+    private static final String KEY_BINDING_CATEGORY = "key.category." + MODID;
     private static final String UPDATER_ENDPOINT = "https://raw.githubusercontent.com/Sollace/Presence-Footsteps/master/version/latest.json";
+
+    public static final Text MOD_NAME = Text.translatable("mod.presencefootsteps.name");
+    private static final Text SOUND_PACK_NAME = Text.translatable("pf.default_sounds.name");
 
     private static PresenceFootsteps instance;
 
@@ -48,7 +52,9 @@ public class PresenceFootsteps implements ClientModInitializer {
 
     private UpdateChecker updater;
 
-    private KeyBinding keyBinding;
+    private KeyBinding optionsKeyBinding;
+    private KeyBinding toggleKeyBinding;
+    private boolean toggleTriggered;
 
     public PresenceFootsteps() {
         instance = this;
@@ -66,8 +72,8 @@ public class PresenceFootsteps implements ClientModInitializer {
         return config;
     }
 
-    public KeyBinding getKeyBinding() {
-        return keyBinding;
+    public KeyBinding getOptionsKeyBinding() {
+        return optionsKeyBinding;
     }
 
     public UpdateChecker getUpdateChecker() {
@@ -83,7 +89,8 @@ public class PresenceFootsteps implements ClientModInitializer {
         config = new PFConfig(pfFolder.resolve("userconfig.json"), this);
         config.load();
 
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.presencefootsteps.settings", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F10, "key.categories.misc"));
+        optionsKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.presencefootsteps.settings", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F10, KEY_BINDING_CATEGORY));
+        toggleKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.presencefootsteps.toggle", InputUtil.Type.KEYSYM, InputUtil.UNKNOWN_KEY.getCode(), KEY_BINDING_CATEGORY));
 
         engine = new SoundEngine(config);
         debugHud = new PFDebugHud(engine);
@@ -92,14 +99,24 @@ public class PresenceFootsteps implements ClientModInitializer {
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(engine);
 
         FabricLoader.getInstance().getModContainer("presencefootsteps").ifPresent(container -> {
-            ResourceManagerHelper.registerBuiltinResourcePack(new Identifier("presencefootsteps", "default_sound_pack"), container, Text.translatable("pf.default_sounds.name"), ResourcePackActivationType.DEFAULT_ENABLED);
+            ResourceManagerHelper.registerBuiltinResourcePack(new Identifier("presencefootsteps", "default_sound_pack"), container, SOUND_PACK_NAME, ResourcePackActivationType.DEFAULT_ENABLED);
         });
     }
 
     private void onTick(MinecraftClient client) {
         Optional.ofNullable(client.player).filter(e -> !e.isRemoved()).ifPresent(cameraEntity -> {
-            if (keyBinding.isPressed() && client.currentScreen == null) {
-                client.setScreen(new PFOptionsScreen(client.currentScreen));
+            if (client.currentScreen == null) {
+                if (optionsKeyBinding.isPressed()) {
+                    client.setScreen(new PFOptionsScreen(client.currentScreen));
+                }
+                if (toggleKeyBinding.isPressed()) {
+                    if (!toggleTriggered) {
+                        toggleTriggered = true;
+                        config.toggleDisabled();
+                    }
+                } else {
+                    toggleTriggered = false;
+                }
             }
 
             engine.onFrame(client, cameraEntity);
@@ -108,21 +125,33 @@ public class PresenceFootsteps implements ClientModInitializer {
                 updater.attempt();
             }
 
-            if (!engine.hasData() && config.isFirstRun()) {
+            if (config.getEnabled() && !engine.hasData() && config.isFirstRun()) {
                 config.setNotFirstRun();
-                MinecraftClient.getInstance().getToastManager().add(SystemToast.create(client, SystemToast.Type.PACK_LOAD_FAILURE,
-                        Text.translatable("key.presencefootsteps.settings"),
-                        Text.translatable("pf.default_sounds.missing", Text.translatable("pf.default_sounds.name"))
-                ));
+                showSystemToast(
+                    Text.translatable("key.presencefootsteps.settings"),
+                    Text.translatable("pf.default_sounds.missing", SOUND_PACK_NAME)
+                );
             }
         });
     }
 
     private void onUpdate(TargettedVersion newVersion, TargettedVersion currentVersion) {
-        ToastManager manager = MinecraftClient.getInstance().getToastManager();
-
-        SystemToast.add(manager, SystemToast.Type.PACK_LOAD_FAILURE,
+        showSystemToast(
                 Text.translatable("pf.update.title"),
-                Text.translatable("pf.update.text", newVersion.version().getFriendlyString(), newVersion.minecraft().getFriendlyString()));
+                Text.translatable("pf.update.text", newVersion.version().getFriendlyString(), newVersion.minecraft().getFriendlyString())
+        );
+    }
+
+    void onEnabledStateChange(boolean enabled) {
+        engine.reload();
+        showSystemToast(
+                MOD_NAME,
+                Text.translatable("key.presencefootsteps.toggle." + (enabled ? "enabled" : "disabled")).formatted(enabled ? Formatting.GREEN : Formatting.GRAY)
+        );
+    }
+
+    public void showSystemToast(Text title, Text body) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        client.getToastManager().add(SystemToast.create(client, SystemToast.Type.PACK_LOAD_FAILURE, title, body));
     }
 }

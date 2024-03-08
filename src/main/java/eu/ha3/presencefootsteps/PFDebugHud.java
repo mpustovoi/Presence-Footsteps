@@ -18,6 +18,7 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.biome.Biome;
 
 public class PFDebugHud {
 
@@ -37,17 +38,20 @@ public class PFDebugHud {
 
         PFConfig config = engine.getConfig();
         list.add(String.format("Enabled: %s, Multiplayer: %s, Running: %s", config.getEnabled(), config.getEnabledMP(), engine.isRunning(client)));
-        list.add(String.format("Volume: Global: %s%%, W: %s%%, Entities[H: %s%%, P: %s%%], Players[U: %s%%, T: %s%% ]",
+        list.add(String.format("Volume: Global[G: %s%%, W: %s%%, F: %s%%]",
                 config.getGlobalVolume(),
-                config.getWetSoundsVolume(),
-                config.getHostileEntitiesVolume(),
-                config.getPassiveEntitiesVolume(),
-                config.getClientPlayerVolume(),
-                config.getOtherPlayerVolume()
+                config.wetSoundsVolume,
+                config.foliageSoundsVolume
         ));
-        list.add(String.format("Stepping Mode: %s, Targeting Mode: %s", config.getLocomotion() == Locomotion.NONE
+        list.add(String.format("Entities[H: %s%%, P: %s%%], Players[U: %s%%, T: %s%% ]",
+                config.hostileEntitiesVolume,
+                config.passiveEntitiesVolume,
+                config.clientPlayerVolume,
+                config.otherPlayerVolume
+        ));
+        list.add(String.format("Stepping Mode: %s, Targeting Mode: %s, Footwear: %s", config.getLocomotion() == Locomotion.NONE
                 ? String.format("AUTO (%sDETECTED %s%s)", Formatting.BOLD, Locomotion.forPlayer(client.player, Locomotion.BIPED), Formatting.RESET)
-                : config.getLocomotion().toString(), config.getEntitySelector()));
+                : config.getLocomotion().toString(), config.getEntitySelector(), config.getEnabledFootwear()));
         list.add(String.format("Data Loaded: B%s P%s G%s",
                 engine.getIsolator().blocks().getSubstrates().size(),
                 engine.getIsolator().primitives().getSubstrates().size(),
@@ -68,8 +72,17 @@ public class PFDebugHud {
                 list.add(Registries.BLOCK.getId(base.getBlock()).toString());
             }
             list.add(String.format(Locale.ENGLISH, "Primitive Key: %s", PrimitiveLookup.getKey(state.getSoundGroup())));
-            boolean hasRain = client.world.hasRain(pos) || state.getFluidState().isIn(FluidTags.WATER) || client.world.getBlockState(pos.up()).getFluidState().isIn(FluidTags.WATER);
-            list.add("Has Wet Sound: " + hasRain);
+            BlockPos above = pos.up();
+            boolean hasRain = client.world.isRaining() && client.world.getBiome(above).value().getPrecipitation(above) == Biome.Precipitation.RAIN;
+            boolean hasLava = client.world.getBlockState(above).getFluidState().isIn(FluidTags.LAVA);
+            boolean hasWater = client.world.hasRain(above)
+                    || state.getFluidState().isIn(FluidTags.WATER)
+                    || client.world.getBlockState(above).getFluidState().isIn(FluidTags.WATER);
+            list.add("Surface Condition: " + (
+                    hasLava ? Formatting.RED + "LAVA"
+                            : hasWater ? Formatting.BLUE + "WET"
+                            : hasRain ? Formatting.GRAY + "SHELTERED" : Formatting.GRAY + "DRY"
+            ));
             renderSoundList("Step Sounds[B]", engine.getIsolator().blocks().getAssociations(state), list);
             renderSoundList("Step Sounds[P]", engine.getIsolator().primitives().getAssociations(state.getSoundGroup()), list);
             list.add("");

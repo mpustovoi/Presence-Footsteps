@@ -82,7 +82,7 @@ public class PFSolver implements Solver {
 
         // we discard the normal block association, and mark the foliage as detected
         if (Emitter.isEmitter(foliage) && Emitter.MESSY_GROUND.equals(engine.getIsolator().blocks().getAssociation(above, Substrates.MESSY))) {
-            return Association.of(above, pos, ply, foliage, Emitter.NOT_EMITTER);
+            return Association.of(above, pos, ply, Emitter.NOT_EMITTER, Emitter.NOT_EMITTER, foliage);
         }
 
         return Association.NOT_EMITTER;
@@ -215,6 +215,7 @@ public class PFSolver implements Solver {
         VoxelShape shape = carpet.getCollisionShape(entity.getWorld(), pos);
         boolean isValidCarpet = !shape.isEmpty() && (shape.getMax(Axis.Y) < 0.2F && shape.getMax(Axis.Y) < collider.getMin(Axis.Y) + 0.1F);
         String association = Emitter.UNASSIGNED;
+        String foliage = Emitter.UNASSIGNED;
 
         if (isValidCarpet && Emitter.isEmitter(association = associations.get(pos, carpet, Substrates.CARPET))) {
             LOGGER.debug("Carpet detected: " + association);
@@ -241,13 +242,15 @@ public class PFSolver implements Solver {
                 association = associations.get(pos, target, Substrates.DEFAULT);
             }
 
-            if (entity.getEquippedStack(EquipmentSlot.FEET).isEmpty() || entity.isSprinting()) {
-                if (Emitter.isEmitter(association) && carpet.getCollisionShape(entity.getWorld(), pos).isEmpty()) {
-                    // This condition implies that foliage over a NOT_EMITTER block CANNOT PLAY
-                    // This block most not be executed if the association is a carpet
-                    pos.move(Direction.UP);
-                    association = Emitter.combine(association, associations.get(pos, carpet, Substrates.FOLIAGE));
-                    pos.move(Direction.DOWN);
+            if (engine.getConfig().foliageSoundsVolume.get() > 0) {
+                if (entity.getEquippedStack(EquipmentSlot.FEET).isEmpty() || entity.isSprinting()) {
+                    if (Emitter.isEmitter(association) && carpet.getCollisionShape(entity.getWorld(), pos).isEmpty()) {
+                        // This condition implies that foliage over a NOT_EMITTER block CANNOT PLAY
+                        // This block most not be executed if the association is a carpet
+                        pos.move(Direction.UP);
+                        foliage = associations.get(pos, carpet, Substrates.FOLIAGE);
+                        pos.move(Direction.DOWN);
+                    }
                 }
             }
         }
@@ -272,6 +275,6 @@ public class PFSolver implements Solver {
         }
 
         // Player has stepped on a non-emitter block as defined in the blockmap
-        return Association.of(target, pos, entity, association, wetAssociation);
+        return Association.of(target, pos, entity, association, wetAssociation, foliage);
     }
 }

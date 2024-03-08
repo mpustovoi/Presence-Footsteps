@@ -14,13 +14,14 @@ public record Association (
         LivingEntity source,
 
         String acousticNames,
-        String wetAcousticNames
+        String wetAcousticNames,
+        String foliageAcousticNames
 ) {
-    public static final Association NOT_EMITTER = new Association(Blocks.AIR.getDefaultState(), BlockPos.ORIGIN, null, Emitter.NOT_EMITTER, Emitter.NOT_EMITTER);
+    public static final Association NOT_EMITTER = new Association(Blocks.AIR.getDefaultState(), BlockPos.ORIGIN, null, Emitter.NOT_EMITTER, Emitter.NOT_EMITTER, Emitter.NOT_EMITTER);
 
-    public static Association of(BlockState state, BlockPos pos, LivingEntity source, String dry, String wet) {
-        if (Emitter.isResult(dry) || Emitter.isResult(wet)) {
-            return new Association(state, pos.toImmutable(), source, dry, wet);
+    public static Association of(BlockState state, BlockPos pos, LivingEntity source, String dry, String wet, String foliage) {
+        if (Emitter.isResult(dry) || Emitter.isResult(wet) || Emitter.isResult(foliage)) {
+            return new Association(state, pos.toImmutable(), source, dry, wet, foliage);
         }
         return NOT_EMITTER;
     }
@@ -30,19 +31,19 @@ public record Association (
     }
 
     public boolean isNotEmitter() {
-        return isNull() || (Emitter.isNonEmitter(acousticNames) && Emitter.isNonEmitter(wetAcousticNames));
+        return isNull() || (
+               Emitter.isNonEmitter(acousticNames)
+            && Emitter.isNonEmitter(wetAcousticNames)
+            && Emitter.isNonEmitter(foliageAcousticNames)
+        );
     }
 
     public boolean hasAssociation() {
-        return !isNotEmitter() && isResult();
+        return !isNotEmitter();
     }
 
     public BlockSoundGroup soundGroup() {
         return state.getSoundGroup();
-    }
-
-    public boolean isResult() {
-        return Emitter.isResult(acousticNames) || Emitter.isResult(wetAcousticNames);
     }
 
     public boolean dataEquals(Association other) {
