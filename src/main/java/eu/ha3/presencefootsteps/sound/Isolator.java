@@ -8,13 +8,14 @@ import eu.ha3.presencefootsteps.sound.acoustics.AcousticLibrary;
 import eu.ha3.presencefootsteps.sound.acoustics.AcousticsFile;
 import eu.ha3.presencefootsteps.sound.acoustics.AcousticsPlayer;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
-import eu.ha3.presencefootsteps.sound.player.ImmediateSoundPlayer;
+import eu.ha3.presencefootsteps.sound.player.PFSoundPlayer;
 import eu.ha3.presencefootsteps.sound.player.SoundPlayer;
 import eu.ha3.presencefootsteps.sound.player.StepSoundPlayer;
 import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import eu.ha3.presencefootsteps.util.ResourceUtils;
 import eu.ha3.presencefootsteps.util.BlockReport.Reportable;
 import eu.ha3.presencefootsteps.world.GolemLookup;
+import eu.ha3.presencefootsteps.world.HeuristicStateLookup;
 import eu.ha3.presencefootsteps.world.Index;
 import eu.ha3.presencefootsteps.world.LocomotionLookup;
 import eu.ha3.presencefootsteps.world.Lookup;
@@ -30,9 +31,10 @@ import net.minecraft.util.Identifier;
 public record Isolator (
         Variator variator,
         Index<Entity, Locomotion> locomotions,
+        HeuristicStateLookup heuristics,
         Lookup<EntityType<?>> golems,
         Lookup<BlockState> blocks,
-        Lookup<BlockSoundGroup> primitives,
+        PrimitiveLookup primitives,
         SoundPlayer soundPlayer,
         StepSoundPlayer stepPlayer,
         AcousticLibrary acoustics
@@ -45,7 +47,7 @@ public record Isolator (
     private static final Identifier VARIATOR = new Identifier("presencefootsteps", "config/variator.json");
 
     public Isolator(SoundEngine engine) {
-        this(engine, new ImmediateSoundPlayer(engine));
+        this(engine, new PFSoundPlayer(engine));
     }
 
     public Isolator(SoundEngine engine, SoundPlayer player) {
@@ -53,7 +55,7 @@ public record Isolator (
     }
 
     public Isolator(SoundEngine engine, SoundPlayer player, StepSoundPlayer stepPlayer) {
-        this(new Variator(), new LocomotionLookup(engine), new GolemLookup(), new StateLookup(), new PrimitiveLookup(), player, stepPlayer, new AcousticsPlayer(player));
+        this(new Variator(), new LocomotionLookup(engine), new HeuristicStateLookup(), new GolemLookup(), new StateLookup(), new PrimitiveLookup(), player, stepPlayer, new AcousticsPlayer(player));
     }
 
     public boolean load(ResourceManager manager) {

@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import eu.ha3.presencefootsteps.config.EntitySelector;
 import eu.ha3.presencefootsteps.config.JsonFile;
+import eu.ha3.presencefootsteps.config.VolumeOption;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
 import net.minecraft.util.crash.CrashReportSection;
 import net.minecraft.util.math.MathHelper;
@@ -12,20 +13,23 @@ public class PFConfig extends JsonFile {
 
     private int volume = 70;
 
-    private int clientPlayerVolume = 100;
-    private int otherPlayerVolume = 100;
-    private int hostileEntitiesVolume = 100;
-    private int passiveEntitiesVolume = 100;
-    private int runningVolumeIncrease = 0;
-    private int wetSoundsVolume = 50;
+    public VolumeOption clientPlayerVolume = new VolumeOption(this, 100);
+    public VolumeOption otherPlayerVolume = new VolumeOption(this, 100);
+    public VolumeOption hostileEntitiesVolume = new VolumeOption(this, 100);
+    public VolumeOption passiveEntitiesVolume = new VolumeOption(this, 100);
+    public int runningVolumeIncrease = 0;
+    public VolumeOption wetSoundsVolume = new VolumeOption(this, 50);
+    public VolumeOption foliageSoundsVolume = new VolumeOption(this, 100);
+
     private int maxSteppingEntities = 50;
 
-    private String stance = "UNKNOWN";
-
+    private boolean disabled;
+    private boolean firstRun = true;
     private boolean multiplayer = true;
-
     private boolean global = true;
+    private boolean footwear = true;
 
+    private Locomotion stance = Locomotion.NONE;
     private EntitySelector targetEntities = EntitySelector.ALL;
 
     private transient final PresenceFootsteps pf;
@@ -51,9 +55,8 @@ public class PFConfig extends JsonFile {
     }
 
     public Locomotion setLocomotion(Locomotion loco) {
-
         if (loco != getLocomotion()) {
-            stance = loco.name();
+            stance = loco;
             save();
 
             pf.getEngine().reload();
@@ -62,56 +65,69 @@ public class PFConfig extends JsonFile {
         return loco;
     }
 
+    public boolean isFirstRun() {
+        return firstRun;
+    }
+
+    public void setNotFirstRun() {
+        firstRun = false;
+        save();
+    }
+
     public Locomotion getLocomotion() {
-        return Locomotion.byName(stance);
+        return stance;
     }
 
     public EntitySelector getEntitySelector() {
         return targetEntities;
     }
 
-    public boolean getEnabledGlobal() {
-        return global && getEnabled();
+    public boolean getEnabledFootwear() {
+        return footwear;
+    }
+
+    public boolean toggleFootwear() {
+        footwear = !footwear;
+        save();
+        return footwear;
     }
 
     public boolean getEnabledMP() {
-        return multiplayer && getEnabled();
+        return multiplayer;
     }
 
     public int getMaxSteppingEntities() {
         return Math.max(1, maxSteppingEntities);
     }
 
+    public boolean toggleDisabled() {
+        disabled = !disabled;
+        save();
+        pf.onEnabledStateChange(!disabled);
+        return disabled;
+    }
+
+    public boolean setDisabled(boolean disabled) {
+        if (disabled != this.disabled) {
+            toggleDisabled();
+        }
+        return disabled;
+    }
+
+    public boolean getDisabled() {
+        return disabled;
+    }
+
     public boolean getEnabled() {
-        return getGlobalVolume() > 0;
+        return !disabled && getGlobalVolume() > 0;
     }
 
     public int getGlobalVolume() {
         return MathHelper.clamp(volume, 0, 100);
     }
 
-    public int getHostileEntitiesVolume() {
-        return MathHelper.clamp(hostileEntitiesVolume, 0, 100);
-    }
-
-    public int getPassiveEntitiesVolume() {
-        return MathHelper.clamp(passiveEntitiesVolume, 0, 100);
-    }
-
-    public int getClientPlayerVolume() {
-        return MathHelper.clamp(clientPlayerVolume, 0, 100);
-    }
-
-    public int getOtherPlayerVolume() {
-        return MathHelper.clamp(otherPlayerVolume, 0, 100);
-    }
-
     public int getRunningVolumeIncrease() {
         return MathHelper.clamp(runningVolumeIncrease, -100, 100);
-    }
-
-    public int getWetSoundsVolume() {
-        return MathHelper.clamp(wetSoundsVolume, 0, 100);
     }
 
     public float setGlobalVolume(float volume) {
@@ -124,41 +140,11 @@ public class PFConfig extends JsonFile {
             save();
 
             if (getEnabled() != wasEnabled) {
-                pf.getEngine().reload();
+                pf.onEnabledStateChange(getEnabled());
             }
         }
 
         return getGlobalVolume();
-    }
-
-    public float setHostileEntitiesVolume(float volume) {
-        hostileEntitiesVolume = volumeScaleToInt(volume);
-        save();
-        return getHostileEntitiesVolume();
-    }
-
-    public float setPassiveEntitiesVolume(float volume) {
-        hostileEntitiesVolume = volumeScaleToInt(volume);
-        save();
-        return getPassiveEntitiesVolume();
-    }
-
-    public float setClientPlayerVolume(float volume) {
-        clientPlayerVolume = volumeScaleToInt(volume);
-        save();
-        return getClientPlayerVolume();
-    }
-
-    public float setOtherPlayerVolume(float volume) {
-        otherPlayerVolume = volumeScaleToInt(volume);
-        save();
-        return getOtherPlayerVolume();
-    }
-
-    public float setWetSoundsVolume(float volume) {
-        wetSoundsVolume = volumeScaleToInt(volume);
-        save();
-        return getWetSoundsVolume();
     }
 
     public float setRunningVolumeIncrease(float volume) {
@@ -169,7 +155,7 @@ public class PFConfig extends JsonFile {
 
     public void populateCrashReport(CrashReportSection section) {
         section.add("PF Global Volume", volume);
-        section.add("PF User's Selected Stance", stance + " (" + getLocomotion() + ")");
+        section.add("PF User's Selected Stance", stance);
         section.add("Enabled Global", global);
         section.add("Enabled Multiplayer", multiplayer);
     }

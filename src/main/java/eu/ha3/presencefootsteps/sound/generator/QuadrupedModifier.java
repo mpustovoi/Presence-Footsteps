@@ -23,7 +23,7 @@ public class QuadrupedModifier extends Modifier<TerrestrialStepSoundGenerator> {
         hoof = (hoof + 1) % 3;
 
         if (event == State.WALK) {
-            generator.produceStep(ply, event);
+            generator.produceStep(event);
         }
     }
 

@@ -2,30 +2,23 @@ package eu.ha3.presencefootsteps.sound.player;
 
 import java.util.Random;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
-import eu.ha3.presencefootsteps.world.Association;
 
 /**
  * A Library that can also play sounds and default footsteps.
  *
  * @author Hurry
  */
-public class ImmediateSoundPlayer implements SoundPlayer, StepSoundPlayer {
+public final class ImmediateSoundPlayer implements SoundPlayer {
     private final Random random = new Random();
-
-    private final DelayedSoundPlayer delayedPlayer = new DelayedSoundPlayer(this);
-
     private final SoundEngine engine;
 
     public ImmediateSoundPlayer(SoundEngine engine) {
@@ -37,36 +30,11 @@ public class ImmediateSoundPlayer implements SoundPlayer, StepSoundPlayer {
         return random;
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public void playStep(Association assos) {
-        BlockSoundGroup soundType = assos.getSoundGroup();
-
-        if (!assos.getState().isLiquid() && soundType != null) {
-            BlockState beside = assos.getSource().getWorld().getBlockState(assos.getPos().up());
-
-            if (beside.getBlock() == Blocks.SNOW) {
-                soundType = Blocks.SNOW.getSoundGroup(beside);
-            }
-
-            playAttenuatedSound(assos.getSource(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch());
-        }
-    }
-
     @Override
     public void playSound(LivingEntity location, String soundName, float volume, float pitch, Options options) {
-
-        if (options.containsKey("delay_min") && options.containsKey("delay_max")) {
-            delayedPlayer.playSound(location, soundName, volume, pitch, options);
-
-            return;
-        }
-
         volume *= options.getOrDefault("volume_percentage", 1F);
-        playAttenuatedSound(location, soundName, volume, pitch);
-    }
+        pitch *= options.getOrDefault("pitch_percentage", 1F);
 
-    private void playAttenuatedSound(LivingEntity location, String soundName, float volume, float pitch) {
         MinecraftClient mc = MinecraftClient.getInstance();
         double distance = mc.gameRenderer.getCamera().getPos().squaredDistanceTo(location.getPos());
 
@@ -80,11 +48,6 @@ public class ImmediateSoundPlayer implements SoundPlayer, StepSoundPlayer {
         } else {
             mc.getSoundManager().play(sound);
         }
-    }
-
-    @Override
-    public void think() {
-        delayedPlayer.think();
     }
 
     public static class UncappedSoundInstance extends PositionedSoundInstance {

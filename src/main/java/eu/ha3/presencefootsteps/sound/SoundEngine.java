@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.Nullable;
 
 import eu.ha3.presencefootsteps.PFConfig;
-import eu.ha3.presencefootsteps.mixins.IEntity;
+import eu.ha3.presencefootsteps.config.EntitySelector;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import eu.ha3.presencefootsteps.world.Solver;
 import eu.ha3.presencefootsteps.world.PFSolver;
@@ -58,14 +58,14 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
 
         if (source instanceof PlayerEntity) {
             if (PlayerUtil.isClientPlayer(source)) {
-                volume *= config.getClientPlayerVolume() / 100F;
+                volume *= config.clientPlayerVolume.getPercentage();
             } else {
-                volume *= config.getOtherPlayerVolume() / 100F;
+                volume *= config.otherPlayerVolume.getPercentage();
             }
         } else if (source instanceof HostileEntity) {
-            volume *= config.getHostileEntitiesVolume() / 100F;
+            volume *= config.hostileEntitiesVolume.getPercentage();
         } else {
-            volume *= config.getPassiveEntitiesVolume() / 100F;
+            volume *= config.passiveEntitiesVolume.getPercentage();
         }
 
         float runningProgress = ((StepSoundSource) source).getStepGenerator(this)
@@ -95,8 +95,19 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
         }
     }
 
+    public boolean isEnabledFor(Entity entity) {
+        return hasData() && isRunning(MinecraftClient.getInstance()) && config.getEntitySelector().test(entity);
+    }
+
+    public boolean hasData() {
+        return hasConfigurations;
+    }
+
     public boolean isRunning(MinecraftClient client) {
-        return hasConfigurations && config.getEnabled() && (client.isInSingleplayer() || config.getEnabledMP());
+        return hasData()
+                && !client.isPaused()
+                && config.getEnabled()
+                && (client.isInSingleplayer() || config.getEnabledMP());
     }
 
     private Stream<? extends Entity> getTargets(final Entity cameraEntity) {
@@ -130,15 +141,11 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
     }
 
     public void onFrame(MinecraftClient client, Entity cameraEntity) {
-        if (!client.isPaused() && isRunning(client)) {
+        if (isRunning(client)) {
             getTargets(cameraEntity).forEach(e -> {
                 try {
                     ((StepSoundSource) e).getStepGenerator(this).ifPresent(generator -> {
-                        if (generator.generateFootsteps((LivingEntity)e)) {
-                            ((IEntity) e).setNextStepDistance(Integer.MAX_VALUE);
-                        } else if (((IEntity) e).getNextStepDistance() == Integer.MAX_VALUE) {
-                            ((IEntity) e).setNextStepDistance(e.distanceTraveled + 1);
-                        }
+                        generator.generateFootsteps();
                     });
                 } catch (Throwable t) {
                     CrashReport report = CrashReport.create(t, "Generating PF sounds for entity");
@@ -160,22 +167,34 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
     }
 
     public boolean onSoundRecieved(@Nullable RegistryEntry<SoundEvent> event, SoundCategory category) {
-        if (event == null || category != SoundCategory.PLAYERS || !isRunning(MinecraftClient.getInstance())) {
+        if (event == null || !isRunning(MinecraftClient.getInstance())) {
+            return false;
+        }
+
+        if (config.getEntitySelector() == EntitySelector.PLAYERS_ONLY && category != SoundCategory.PLAYERS) {
+            return false;
+        }
+
+        if (config.getEntitySelector() == EntitySelector.PLAYERS_AND_HOSTILES && category != SoundCategory.PLAYERS && category != SoundCategory.HOSTILE) {
+            return false;
+        }
+
+        if (config.getEntitySelector() == EntitySelector.ALL && category != SoundCategory.PLAYERS && category != SoundCategory.HOSTILE && category != SoundCategory.NEUTRAL) {
             return false;
         }
 
         return event.getKeyOrValue().right().filter(sound -> {
             if (event == SoundEvents.ENTITY_PLAYER_SWIM
-                    || event == SoundEvents.ENTITY_PLAYER_SPLASH
-                    || event == SoundEvents.ENTITY_PLAYER_BIG_FALL
-                    || event == SoundEvents.ENTITY_PLAYER_SMALL_FALL) {
-                       return true;
-                   }
+                || event == SoundEvents.ENTITY_PLAYER_SPLASH
+                || event == SoundEvents.ENTITY_PLAYER_BIG_FALL
+                || event == SoundEvents.ENTITY_PLAYER_SMALL_FALL) {
+                return true;
+            }
 
-                   //String[] name = sound.getId().getPath().split("\\.");
-                   return false;//name.length > 0
-                          // && "block".contentEquals(name[0])
-                          // && "step".contentEquals(name[name.length - 1]);
+            String[] name = sound.getId().getPath().split("\\.");
+            return name.length > 0
+                    && "block".contentEquals(name[0])
+                    && "step".contentEquals(name[name.length - 1]);
         }).isPresent();
     }
 
@@ -198,18 +217,12 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
     }
 
     public void reloadEverything(ResourceManager manager) {
-        isolator = new Isolator(this);
+        shutdown();
         hasConfigurations = isolator.load(manager);
     }
 
     public void shutdown() {
         isolator = new Isolator(this);
         hasConfigurations = false;
-
-        PlayerEntity player = MinecraftClient.getInstance().player;
-
-        if (player != null) {
-            ((IEntity) player).setNextStepDistance(0);
-        }
     }
 }

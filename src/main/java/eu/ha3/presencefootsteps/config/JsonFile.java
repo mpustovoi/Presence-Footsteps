@@ -18,15 +18,15 @@ import eu.ha3.presencefootsteps.PresenceFootsteps;
  * @author Sollace
  */
 public abstract class JsonFile {
-
-    protected transient final Gson gson = new GsonBuilder()
+    private transient final Gson gson = new GsonBuilder()
             .registerTypeAdapter(getClass(), (InstanceCreator<JsonFile>)t -> this)
+            .registerTypeAdapter(VolumeOption.class, new VolumeOption.Adapter(this))
             .setPrettyPrinting()
             .create();
 
     private transient Path file;
 
-    JsonFile() { }
+    JsonFile() {}
 
     public JsonFile(Path file) {
         this.file = file;

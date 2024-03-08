@@ -1322,6 +1322,44 @@
         }
       ]
     },
+    "chainmail": {
+      "walk": {
+        "type": "chance",
+        "probability": 45,
+        "acoustic": {
+          "name": "chain.chain_wander",
+          "pitch_min": 0.25,
+          "pitch_max": 0.5,
+          "vol_min": 1,
+          "vol_max": 4
+        }
+      }
+    },
+    "metalboots": {
+      "walk": {
+        "name": "metalbar.metalbar_wander",
+        "pitch_min": 1.25,
+        "pitch_max": 1.5,
+        "vol_min": 13,
+        "vol_max": 16
+      }
+    },
+    "heavyboots": {
+      "walk": {
+        "name": "metalbar.metalbar_walk",
+        "pitch_min": 0.6,
+        "pitch_max": 0.8,
+        "vol_min": 2,
+        "vol_max": 3
+      }
+    },
+    "boots": {
+      "walk": {
+        "name": "rug.rug_walk",
+        "vol_min": 7,
+        "vol_max": 7
+      }
+    },
     "metalbar": {
       "walk": "metalbar.metalbar_walk",
       "wander": {
