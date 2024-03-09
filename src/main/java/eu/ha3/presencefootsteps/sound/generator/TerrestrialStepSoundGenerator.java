@@ -16,8 +16,8 @@ import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import eu.ha3.presencefootsteps.world.Association;
 import eu.ha3.presencefootsteps.world.AssociationPool;
-import eu.ha3.presencefootsteps.world.Emitter;
 import eu.ha3.presencefootsteps.world.Solver;
+import eu.ha3.presencefootsteps.world.SoundsKey;
 import eu.ha3.presencefootsteps.world.Substrates;
 
 class TerrestrialStepSoundGenerator implements StepSoundGenerator {
@@ -80,7 +80,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         if (isImmobile && (entity.isOnGround() || !entity.isSubmergedInWater()) && playbackImmobile()) {
             Association assos = associations.findAssociation(0d, isRightFoot);
 
-            if (assos.hasAssociation() || !isImmobile) {
+            if (!assos.isSilent() || !isImmobile) {
                 playStep(assos, State.STAND);
             }
         }
@@ -215,7 +215,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             Options options = Options.singular("gliding_volume", volume);
             State state = entity.isSubmergedInWater() ? State.SWIM : event;
 
-            engine.getIsolator().acoustics().playAcoustic(entity, "_SWIM", state, options);
+            engine.getIsolator().acoustics().playAcoustic(entity, SoundsKey.SWIM, state, options);
 
             playStep(associations.findAssociation(entity.getBlockPos().down(), Solver.MESSY_FOLIAGE_STRATEGY), event);
         } else {
@@ -313,7 +313,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             entity.getZ()
         ), Solver.MESSY_FOLIAGE_STRATEGY);
 
-        if (!assos.isNull()) {
+        if (!assos.isSilent()) {
             if (!isMessyFoliage) {
                 isMessyFoliage = true;
                 playStep(assos, State.WALK);
@@ -327,8 +327,8 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
         if (engine.getConfig().getEnabledFootwear()) {
             if (entity.getEquippedStack(EquipmentSlot.FEET).getItem() instanceof ArmorItem bootItem) {
-                String bootSound = engine.getIsolator().primitives().getAssociation(bootItem.getEquipSound(), Substrates.DEFAULT);
-                if (Emitter.isEmitter(bootSound)) {
+                SoundsKey bootSound = engine.getIsolator().primitives().getAssociation(bootItem.getEquipSound(), Substrates.DEFAULT);
+                if (bootSound.isEmitter()) {
                     engine.getIsolator().stepPlayer().playStep(association, eventType, Options.singular("volume_percentage", 0.5F));
                     engine.getIsolator().acoustics().playAcoustic(entity, bootSound, eventType, Options.EMPTY);
 
@@ -343,7 +343,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     protected void playSinglefoot(double verticalOffsetAsMinus, State eventType, boolean foot) {
         Association assos = associations.findAssociation(verticalOffsetAsMinus, isRightFoot);
 
-        if (assos.isNotEmitter()) {
+        if (!assos.isResult()) {
             assos = associations.findAssociation(verticalOffsetAsMinus + 1, isRightFoot);
         }
 
@@ -355,7 +355,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         Association leftFoot = associations.findAssociation(verticalOffsetAsMinus, false);
         Association rightFoot = associations.findAssociation(verticalOffsetAsMinus, true);
 
-        if (leftFoot.dataEquals(rightFoot)) {
+        if (leftFoot.isResult() && leftFoot.dataEquals(rightFoot)) {
             // If the two feet solve to the same sound, except NO_ASSOCIATION, only play the sound once
             if (isRightFoot) {
                 leftFoot = Association.NOT_EMITTER;

@@ -2,6 +2,7 @@ package eu.ha3.presencefootsteps.sound.generator;
 
 import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.util.MathUtil;
+import eu.ha3.presencefootsteps.world.SoundsKey;
 import eu.ha3.presencefootsteps.config.Variator;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
@@ -9,7 +10,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.Vec3d;
 
 class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
-
+    private static final SoundsKey SWIFT = SoundsKey.of("_SWIFT");
+    private static final SoundsKey WING = SoundsKey.of("_WING");
     protected boolean isFalling = false;
 
     protected FlightState state = FlightState.IDLE;
@@ -93,9 +95,9 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
             if (!isAirborne) {
                 float volume = speedingJumpStateChange ? 2
                         : MathUtil.scalex(lastFallDistance, variator.HUGEFALL_LANDING_DISTANCE_MIN, variator.HUGEFALL_LANDING_DISTANCE_MAX);
-                engine.getIsolator().acoustics().playAcoustic(entity, "_SWIFT", State.LAND, Options.singular("gliding_volume", volume));
+                engine.getIsolator().acoustics().playAcoustic(entity, SWIFT, State.LAND, Options.singular("gliding_volume", volume));
             } else {
-                engine.getIsolator().acoustics().playAcoustic(entity, "_SWIFT", State.JUMP, Options.EMPTY);
+                engine.getIsolator().acoustics().playAcoustic(entity, SWIFT, State.JUMP, Options.EMPTY);
             }
         }
 
@@ -127,7 +129,7 @@ class WingedStepSoundGenerator extends TerrestrialStepSoundGenerator {
                         variator.WING_IMMOBILE_FADE_START + variator.WING_IMMOBILE_FADE_DURATION);
             }
 
-            engine.getIsolator().acoustics().playAcoustic(entity, "_WING", State.WALK, Options.singular("gliding_volume", volume));
+            engine.getIsolator().acoustics().playAcoustic(entity, WING, State.WALK, Options.singular("gliding_volume", volume));
         }
     }
 

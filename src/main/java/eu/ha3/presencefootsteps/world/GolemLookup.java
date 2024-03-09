@@ -11,8 +11,8 @@ import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 
 public class GolemLookup extends AbstractSubstrateLookup<EntityType<?>> {
     @Override
-    public String getAssociation(EntityType<?> key, String substrate) {
-        return getSubstrateMap(getId(key), substrate).getOrDefault(EntityType.getId(key), Emitter.UNASSIGNED);
+    public SoundsKey getAssociation(EntityType<?> key, String substrate) {
+        return getSubstrateMap(getId(key), substrate).getOrDefault(EntityType.getId(key), SoundsKey.UNASSIGNED);
     }
 
     @Override
@@ -28,9 +28,9 @@ public class GolemLookup extends AbstractSubstrateLookup<EntityType<?>> {
                     writer.object("associations", () -> {
                         getSubstrates().forEach(substrate -> {
                             try {
-                                String association = getAssociation(type, substrate);
-                                if (Emitter.isResult(association)) {
-                                    writer.field(substrate, association);
+                                SoundsKey association = getAssociation(type, substrate);
+                                if (association.isResult()) {
+                                    writer.field(substrate, association.raw());
                                 }
                             } catch (IOException ignore) {}
                         });

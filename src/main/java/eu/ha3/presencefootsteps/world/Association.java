@@ -2,51 +2,40 @@ package eu.ha3.presencefootsteps.world;
 
 import java.util.Objects;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.math.BlockPos;
 
 public record Association (
         BlockState state,
         BlockPos pos,
-        LivingEntity source,
+        @Nullable LivingEntity source,
 
-        String acousticNames,
-        String wetAcousticNames,
-        String foliageAcousticNames
+        SoundsKey dry,
+        SoundsKey wet,
+        SoundsKey foliage
 ) {
-    public static final Association NOT_EMITTER = new Association(Blocks.AIR.getDefaultState(), BlockPos.ORIGIN, null, Emitter.NOT_EMITTER, Emitter.NOT_EMITTER, Emitter.NOT_EMITTER);
+    public static final Association NOT_EMITTER = new Association(Blocks.AIR.getDefaultState(), BlockPos.ORIGIN, null, SoundsKey.NON_EMITTER, SoundsKey.NON_EMITTER, SoundsKey.NON_EMITTER);
 
-    public static Association of(BlockState state, BlockPos pos, LivingEntity source, String dry, String wet, String foliage) {
-        if (Emitter.isResult(dry) || Emitter.isResult(wet) || Emitter.isResult(foliage)) {
-            return new Association(state, pos.toImmutable(), source, dry, wet, foliage);
+    public static Association of(BlockState state, BlockPos pos, LivingEntity source, SoundsKey dry, SoundsKey wet, SoundsKey foliage) {
+        if (dry.isSilent() && wet.isSilent() && foliage.isSilent()) {
+            return NOT_EMITTER;
         }
-        return NOT_EMITTER;
+        return new Association(state, pos.toImmutable(), source, dry, wet, foliage);
     }
 
-    public boolean isNull() {
+    public boolean isResult() {
+        return dry.isResult() || wet.isResult() || foliage.isResult();
+    }
+
+    public boolean isSilent() {
         return this == NOT_EMITTER;
     }
 
-    public boolean isNotEmitter() {
-        return isNull() || (
-               Emitter.isNonEmitter(acousticNames)
-            && Emitter.isNonEmitter(wetAcousticNames)
-            && Emitter.isNonEmitter(foliageAcousticNames)
-        );
-    }
-
-    public boolean hasAssociation() {
-        return !isNotEmitter();
-    }
-
-    public BlockSoundGroup soundGroup() {
-        return state.getSoundGroup();
-    }
-
     public boolean dataEquals(Association other) {
-        return hasAssociation() && Objects.equals(acousticNames, other.acousticNames);
+        return Objects.equals(dry, other.dry);
     }
 }
