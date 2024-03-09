@@ -9,7 +9,7 @@ import eu.ha3.presencefootsteps.util.MathUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.entity.LivingEntity;
 
-class DelayedSoundPlayer implements SoundPlayer {
+public class DelayedSoundPlayer implements SoundPlayer {
     private static final boolean USING_LATENESS = true;
     private static final boolean USING_EARLYNESS = true;
 
@@ -35,10 +35,13 @@ class DelayedSoundPlayer implements SoundPlayer {
 
     @Override
     public void playSound(LivingEntity location, String soundName, float volume, float pitch, Options options) {
+        if (!options.containsKey("delay_min") || !options.containsKey("delay_max")) {
+            immediate.playSound(location, soundName, volume, pitch, options);
+            return;
+        }
         pending.add(new PendingSound(location, soundName, volume, pitch, options));
     }
 
-    @Override
     public void think() {
         currentTime = System.currentTimeMillis();
 

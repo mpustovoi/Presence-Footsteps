@@ -84,7 +84,7 @@ public class PFDebugHud {
                             : hasRain ? Formatting.GRAY + "SHELTERED" : Formatting.GRAY + "DRY"
             ));
             renderSoundList("Step Sounds[B]", engine.getIsolator().blocks().getAssociations(state), list);
-            renderSoundList("Step Sounds[P]", engine.getIsolator().primitives().getAssociations(state.getSoundGroup()), list);
+            renderSoundList("Step Sounds[P]", engine.getIsolator().primitives().getAssociations(state.getSoundGroup().getStepSound()), list);
             list.add("");
 
             insertAt(list, finalList, "Targeted Block: ", 1);
