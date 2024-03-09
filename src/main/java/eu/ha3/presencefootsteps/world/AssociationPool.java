@@ -24,7 +24,7 @@ public final class AssociationPool {
     private final Solver solver;
 
     private boolean wasGolem;
-    private String association;
+    private SoundsKey association;
 
     public AssociationPool(LivingEntity entity, SoundEngine engine) {
         this.entity = entity;
@@ -64,11 +64,11 @@ public final class AssociationPool {
      * @param substrate     The substrate corresponding to the stage of lookup being performed. One of the values in {@link Substrates}
      * @return The matching acoustic names or {@link Emitter#UNASSIGNED} if no match could be determined.
      */
-    public String get(BlockPos pos, BlockState state, String substrate) {
+    public SoundsKey get(BlockPos pos, BlockState state, String substrate) {
         for (Entity golem : entity.getWorld().getOtherEntities(entity, new Box(pos).expand(0.5, 0, 0.5), e -> {
             return !e.isCollidable() || e.getBoundingBox().maxY < entity.getY() + 0.2F;
         })) {
-            if (Emitter.isEmitter(association = engine.getIsolator().golems().getAssociation(golem.getType(), substrate))) {
+            if ((association = engine.getIsolator().golems().getAssociation(golem.getType(), substrate)).isEmitter()) {
                 return association;
             }
         }
@@ -86,15 +86,15 @@ public final class AssociationPool {
             return association;
         }
 
-        return Emitter.UNASSIGNED;
+        return SoundsKey.UNASSIGNED;
     }
 
     private boolean getForState(BlockState state, String substrate) {
-        return Emitter.isResult(association = engine.getIsolator().blocks().getAssociation(state, substrate));
+        return (association = engine.getIsolator().blocks().getAssociation(state, substrate)).isResult();
     }
 
     private boolean getForPrimitive(BlockState state) {
         BlockSoundGroup sounds = state.getSoundGroup();
-        return Emitter.isResult(association = engine.getIsolator().primitives().getAssociation(sounds, PrimitiveLookup.getSubstrate(sounds)));
+        return (association = engine.getIsolator().primitives().getAssociation(sounds, PrimitiveLookup.getSubstrate(sounds))).isResult();
     }
 }

@@ -34,18 +34,18 @@ public record StateLookup(Map<String, Bucket> substrates) implements Lookup<Bloc
     }
 
     @Override
-    public String getAssociation(BlockState state, String substrate) {
+    public SoundsKey getAssociation(BlockState state, String substrate) {
         return substrates.getOrDefault(substrate, Bucket.EMPTY).get(state).value;
     }
 
     @Override
     public void add(String key, String value) {
-        if (!Emitter.isResult(value)) {
-            PresenceFootsteps.logger.info("Skipping non-result value " + key + "=" + value);
+        SoundsKey sound = SoundsKey.of(value);
+        if (!sound.isResult()) {
             return;
         }
 
-        Key k = Key.of(key, value);
+        Key k = Key.of(key, sound);
 
         substrates.computeIfAbsent(k.substrate, Bucket.Substrate::new).add(k);
     }
@@ -85,9 +85,9 @@ public record StateLookup(Map<String, Bucket> substrates) implements Lookup<Bloc
                     writer.object("associations", () -> {
                         getSubstrates().forEach(substrate -> {
                             try {
-                                String association = getAssociation(state, substrate);
-                                if (Emitter.isResult(association)) {
-                                    writer.field(substrate, association);
+                                SoundsKey association = getAssociation(state, substrate);
+                                if (association.isResult()) {
+                                    writer.field(substrate, association.raw());
                                 }
                             } catch (IOException ignore) {}
                         });
@@ -240,14 +240,14 @@ public record StateLookup(Map<String, Bucket> substrates) implements Lookup<Bloc
             Identifier identifier,
             String substrate,
             Set<Attribute> properties,
-            String value,
+            SoundsKey value,
             boolean empty,
             boolean isTag,
             boolean isWildcard
     ) {
-        public static final Key NULL = new Key(new Identifier("air"), "", ObjectSets.emptySet(), Emitter.UNASSIGNED, true, false, false);
+        public static final Key NULL = new Key(new Identifier("air"), "", ObjectSets.emptySet(), SoundsKey.UNASSIGNED, true, false, false);
 
-        public static Key of(String key, String value) {
+        public static Key of(String key, SoundsKey value) {
             final boolean isTag = key.indexOf('#') == 0;
 
             if (isTag) {
@@ -261,7 +261,7 @@ public record StateLookup(Map<String, Bucket> substrates) implements Lookup<Bloc
             if (!isWildcard) {
                 if (id.indexOf('^') > -1) {
                     identifier = new Identifier(id.split("\\^")[0]);
-                    PresenceFootsteps.logger.warn("Metadata entry for " + key + "=" + value + " was ignored");
+                    PresenceFootsteps.logger.warn("Metadata entry for " + key + "=" + value.raw() + " was ignored");
                 } else {
                     identifier = new Identifier(id);
                 }

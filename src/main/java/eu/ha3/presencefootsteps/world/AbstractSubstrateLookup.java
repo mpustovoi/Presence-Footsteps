@@ -9,19 +9,19 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.util.Identifier;
 
 abstract class AbstractSubstrateLookup<T> implements Lookup<T> {
-    private final Map<String, Map<Identifier, String>> substrates = new Object2ObjectLinkedOpenHashMap<>();
+    private final Map<String, Map<Identifier, SoundsKey>> substrates = new Object2ObjectLinkedOpenHashMap<>();
 
     protected abstract Identifier getId(T key);
 
     @Override
-    public String getAssociation(T key, String substrate) {
+    public SoundsKey getAssociation(T key, String substrate) {
         final Identifier id = getId(key);
-        return getSubstrateMap(id, substrate).getOrDefault(id, Emitter.UNASSIGNED);
+        return getSubstrateMap(id, substrate).getOrDefault(id, SoundsKey.UNASSIGNED);
     }
 
     @Nullable
-    protected Map<Identifier, String> getSubstrateMap(Identifier id, String substrate) {
-        Map<Identifier, String> primitives = substrates.get(substrate);
+    protected Map<Identifier, SoundsKey> getSubstrateMap(Identifier id, String substrate) {
+        Map<Identifier, SoundsKey> primitives = substrates.get(substrate);
         if (primitives != null) {
             return primitives;
         }
@@ -50,7 +50,7 @@ abstract class AbstractSubstrateLookup<T> implements Lookup<T> {
 
         substrates
             .computeIfAbsent(substrate, s -> new Object2ObjectLinkedOpenHashMap<>())
-            .put(new Identifier(primitive), value);
+            .put(new Identifier(primitive), SoundsKey.of(value));
     }
 
     @Override

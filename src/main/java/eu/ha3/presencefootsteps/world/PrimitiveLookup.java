@@ -14,16 +14,16 @@ public class PrimitiveLookup extends AbstractSubstrateLookup<BlockSoundGroup> {
         return key.getStepSound().getId();
     }
 
-    public String getAssociation(SoundEvent key, String substrate) {
+    public SoundsKey getAssociation(SoundEvent key, String substrate) {
         final Identifier id = key.getId();
-        return getSubstrateMap(id, substrate).getOrDefault(id, Emitter.UNASSIGNED);
+        return getSubstrateMap(id, substrate).getOrDefault(id, SoundsKey.UNASSIGNED);
     }
 
     @Override
     public void writeToReport(boolean full, JsonObjectWriter writer, Map<String, BlockSoundGroup> groups) throws IOException {
         writer.each(groups.values(), group -> {
             if (full || !contains(group)) {
-                writer.field(getKey(group), getAssociation(group, getSubstrate(group)));
+                writer.field(getKey(group), getAssociation(group, getSubstrate(group)).raw());
             }
         });
     }
