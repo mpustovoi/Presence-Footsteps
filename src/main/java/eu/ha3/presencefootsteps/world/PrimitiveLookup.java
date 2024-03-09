@@ -8,22 +8,18 @@ import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 
-public class PrimitiveLookup extends AbstractSubstrateLookup<BlockSoundGroup> {
+public class PrimitiveLookup extends AbstractSubstrateLookup<SoundEvent> {
     @Override
-    protected Identifier getId(BlockSoundGroup key) {
-        return key.getStepSound().getId();
-    }
-
-    public SoundsKey getAssociation(SoundEvent key, String substrate) {
-        final Identifier id = key.getId();
-        return getSubstrateMap(id, substrate).getOrDefault(id, SoundsKey.UNASSIGNED);
+    protected Identifier getId(SoundEvent key) {
+        return key.getId();
     }
 
     @Override
     public void writeToReport(boolean full, JsonObjectWriter writer, Map<String, BlockSoundGroup> groups) throws IOException {
         writer.each(groups.values(), group -> {
-            if (full || !contains(group)) {
-                writer.field(getKey(group), getAssociation(group, getSubstrate(group)).raw());
+            SoundEvent event = group.getStepSound();
+            if (full || !contains(event)) {
+                writer.field(getKey(group), getAssociation(event, getSubstrate(group)).raw());
             }
         });
     }
