@@ -15,7 +15,7 @@ public interface Lookup<T> extends Loadable, Reportable {
      * Returns Emitter.UNASSIGNED when no mapping exists,
      * or Emitter.NOT_EMITTER if such a mapping exists and produces no sound.
      */
-    String getAssociation(T state, String substrate);
+    SoundsKey getAssociation(T state, String substrate);
 
     /**
      * Gets a set of all the substrates this map contains entries for.
@@ -25,13 +25,13 @@ public interface Lookup<T> extends Loadable, Reportable {
     /**
      * Gets all the associations for the given state.
      */
-    default Map<String, String> getAssociations(T state) {
-        final Map<String, String> result = new Object2ObjectOpenHashMap<>();
+    default Map<String, SoundsKey> getAssociations(T state) {
+        final Map<String, SoundsKey> result = new Object2ObjectOpenHashMap<>();
 
         for (String substrate : getSubstrates()) {
-            String association = getAssociation(state, substrate);
+            SoundsKey association = getAssociation(state, substrate);
 
-            if (Emitter.isResult(association)) {
+            if (association.isResult()) {
                 result.put(substrate, association);
             }
         }

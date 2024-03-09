@@ -5,8 +5,8 @@ import java.util.*;
 import eu.ha3.presencefootsteps.api.DerivedBlock;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
-import eu.ha3.presencefootsteps.world.Emitter;
 import eu.ha3.presencefootsteps.world.PrimitiveLookup;
+import eu.ha3.presencefootsteps.world.SoundsKey;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -109,7 +109,7 @@ public class PFDebugHud {
         values.clear();
     }
 
-    private void renderSoundList(String title, Map<String, String> sounds, List<String> list) {
+    private void renderSoundList(String title, Map<String, SoundsKey> sounds, List<String> list) {
         if (sounds.isEmpty()) {
             return;
         }
@@ -124,7 +124,7 @@ public class PFDebugHud {
             if (!entry.getKey().isEmpty()) {
                 combinedList.append(entry.getKey()).append(":");
             }
-            combinedList.append(entry.getValue());
+            combinedList.append(entry.getValue().raw());
         }
         combinedList.append(" ]");
         list.add(combinedList.toString());
@@ -134,10 +134,10 @@ public class PFDebugHud {
         }
 
         if (sounds.isEmpty()) {
-            list.add(Emitter.UNASSIGNED);
+            list.add(SoundsKey.UNASSIGNED.raw());
         } else {
             sounds.forEach((key, value) -> {
-                list.add((key.isEmpty() ? "default" : key) + ": " + value);
+                list.add((key.isEmpty() ? "default" : key) + ": " + value.raw());
             });
         }
     }
