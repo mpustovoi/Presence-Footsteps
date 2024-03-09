@@ -78,10 +78,10 @@ public final class AssociationPool {
             getForState(state, substrate)
             || (!baseState.isAir() && (
                     getForState(baseState, substrate)
-                || (!Substrates.DEFAULT.equals(substrate) && getForState(baseState, Substrates.DEFAULT))
-                || getForPrimitive(baseState)
+                || (!Substrates.isDefault(substrate) && getForState(baseState, Substrates.DEFAULT))
+                || (getForPrimitive(baseState, substrate))
             ))
-            || getForPrimitive(state)
+            || getForPrimitive(state, substrate)
         )) {
             return association;
         }
@@ -93,7 +93,10 @@ public final class AssociationPool {
         return (association = engine.getIsolator().blocks().getAssociation(state, substrate)).isResult();
     }
 
-    private boolean getForPrimitive(BlockState state) {
+    private boolean getForPrimitive(BlockState state, String substrate) {
+        if (Substrates.isSupplimentary(substrate)) {
+            return false;
+        }
         BlockSoundGroup sounds = state.getSoundGroup();
         return (association = engine.getIsolator().primitives().getAssociation(sounds.getStepSound(), PrimitiveLookup.getSubstrate(sounds))).isResult();
     }

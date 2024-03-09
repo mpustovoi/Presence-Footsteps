@@ -6,7 +6,6 @@ import java.util.function.BiFunction;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.resource.language.I18n;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -51,10 +50,6 @@ public enum Locomotion {
 
     public Text getOptionTooltip() {
         return Text.translatable(translationKey + ".tooltip");
-    }
-
-    public String getDisplayName() {
-        return I18n.translate("pf.stance", I18n.translate(translationKey));
     }
 
     public static Locomotion byName(String name) {

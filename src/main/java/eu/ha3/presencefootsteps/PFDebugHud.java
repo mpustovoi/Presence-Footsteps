@@ -50,8 +50,8 @@ public class PFDebugHud {
                 config.otherPlayerVolume
         ));
         list.add(String.format("Stepping Mode: %s, Targeting Mode: %s, Footwear: %s", config.getLocomotion() == Locomotion.NONE
-                ? String.format("AUTO (%sDETECTED %s%s)", Formatting.BOLD, Locomotion.forPlayer(client.player, Locomotion.BIPED), Formatting.RESET)
-                : config.getLocomotion().toString(), config.getEntitySelector(), config.getEnabledFootwear()));
+                ? String.format("AUTO (%sDETECTED %s%s)", Formatting.BOLD, Locomotion.forPlayer(client.player, Locomotion.NONE), Formatting.RESET)
+                : config.getLocomotion(), config.getEntitySelector(), config.getEnabledFootwear()));
         list.add(String.format("Data Loaded: B%s P%s G%s",
                 engine.getIsolator().blocks().getSubstrates().size(),
                 engine.getIsolator().primitives().getSubstrates().size(),
