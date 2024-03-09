@@ -19,8 +19,7 @@ record ChanceAcoustic(
 
     @Override
     public void playSound(SoundPlayer player, LivingEntity location, State event, Options inputOptions) {
-        final float rand = player.getRNG().nextFloat();
-        if (rand * 100 <= probability) {
+        if (player.getRNG().nextFloat() * 100 <= probability) {
             acoustic.playSound(player, location, event, inputOptions);
         }
     }

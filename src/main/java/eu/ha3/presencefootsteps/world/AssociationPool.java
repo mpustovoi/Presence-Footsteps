@@ -95,6 +95,6 @@ public final class AssociationPool {
 
     private boolean getForPrimitive(BlockState state) {
         BlockSoundGroup sounds = state.getSoundGroup();
-        return (association = engine.getIsolator().primitives().getAssociation(sounds, PrimitiveLookup.getSubstrate(sounds))).isResult();
+        return (association = engine.getIsolator().primitives().getAssociation(sounds.getStepSound(), PrimitiveLookup.getSubstrate(sounds))).isResult();
     }
 }

@@ -324,12 +324,11 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     protected void playStep(Association association, State eventType) {
-
         if (engine.getConfig().getEnabledFootwear()) {
             if (entity.getEquippedStack(EquipmentSlot.FEET).getItem() instanceof ArmorItem bootItem) {
                 SoundsKey bootSound = engine.getIsolator().primitives().getAssociation(bootItem.getEquipSound(), Substrates.DEFAULT);
                 if (bootSound.isEmitter()) {
-                    engine.getIsolator().stepPlayer().playStep(association, eventType, Options.singular("volume_percentage", 0.5F));
+                    engine.getIsolator().acoustics().playStep(association, eventType, Options.singular("volume_percentage", 0.5F));
                     engine.getIsolator().acoustics().playAcoustic(entity, bootSound, eventType, Options.EMPTY);
 
                     return;
@@ -337,7 +336,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             }
         }
 
-        engine.getIsolator().stepPlayer().playStep(association, eventType, Options.EMPTY);
+        engine.getIsolator().acoustics().playStep(association, eventType, Options.EMPTY);
     }
 
     protected void playSinglefoot(double verticalOffsetAsMinus, State eventType, boolean foot) {

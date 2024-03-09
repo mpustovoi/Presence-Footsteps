@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import eu.ha3.presencefootsteps.PFConfig;
 import eu.ha3.presencefootsteps.config.EntitySelector;
+import eu.ha3.presencefootsteps.sound.player.ImmediateSoundPlayer;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import eu.ha3.presencefootsteps.world.Solver;
 import eu.ha3.presencefootsteps.world.PFSolver;
@@ -43,7 +44,8 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
     private static final Identifier ID = new Identifier("presencefootsteps", "sounds");
 
     private Isolator isolator = new Isolator(this);
-    private Solver solver = new PFSolver(this);
+    private final Solver solver = new PFSolver(this);
+    final ImmediateSoundPlayer soundPlayer = new ImmediateSoundPlayer(this);
 
     private final PFConfig config;
 
@@ -162,7 +164,7 @@ public class SoundEngine implements IdentifiableResourceReloadListener {
                 }
             });
 
-            isolator.soundPlayer().think(); // Delayed sounds
+            isolator.acoustics().think(); // Delayed sounds
         }
     }
 
