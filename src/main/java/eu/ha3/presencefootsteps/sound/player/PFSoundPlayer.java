@@ -5,6 +5,7 @@ import java.util.Random;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import eu.ha3.presencefootsteps.sound.State;
+import eu.ha3.presencefootsteps.sound.acoustics.AcousticLibrary;
 import eu.ha3.presencefootsteps.world.Association;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -35,22 +36,29 @@ public class PFSoundPlayer implements SoundPlayer, StepSoundPlayer {
 
     @SuppressWarnings("deprecation")
     @Override
-    public void playStep(Association assos, State eventType, Options options) {
-        if (assos.isNotEmitter()) {
-            return;
-        }
+    public void playStep(Association association, State event, Options options) {
 
-        if (assos.hasAssociation()) {
-            engine.getIsolator().acoustics().playAcoustic(assos, eventType, options);
-        } else if (!assos.state().isLiquid()) {
-            BlockSoundGroup soundType = assos.soundGroup();
-            BlockState above = assos.source().getWorld().getBlockState(assos.pos().up());
+        AcousticLibrary library = engine.getIsolator().acoustics();
+
+        if (association.hasCoreSound()) {
+            library.playAcoustic(association.source(), association.acousticNames(), event, options);
+        } else if (!association.state().isLiquid()) {
+            BlockSoundGroup soundType = association.soundGroup();
+            BlockState above = association.source().getWorld().getBlockState(association.pos().up());
 
             if (above.isOf(Blocks.SNOW)) {
                 soundType = above.getSoundGroup();
             }
 
-            immediatePlayer.playSound(assos.source(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch(), options);
+            immediatePlayer.playSound(association.source(), soundType.getStepSound().getId().toString(), soundType.getVolume() * 0.15F, soundType.getPitch(), options);
+        }
+
+        if (association.hasWetSound() && Options.WET_VOLUME_OPTIONS.get("volume_percentage") > 0.1F) {
+            library.playAcoustic(association.source(), association.wetAcousticNames(), event, options.and(Options.WET_VOLUME_OPTIONS));
+        }
+
+        if (association.hasFoliageSound() && Options.FOLIAGE_VOLUME_OPTIONS.get("volume_percentage") > 0.1F) {
+            library.playAcoustic(association.source(), association.foliageAcousticNames(), event, options.and(Options.FOLIAGE_VOLUME_OPTIONS));
         }
     }
 

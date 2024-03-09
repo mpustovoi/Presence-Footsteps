@@ -80,7 +80,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         if (isImmobile && (entity.isOnGround() || !entity.isSubmergedInWater()) && playbackImmobile()) {
             Association assos = associations.findAssociation(0d, isRightFoot);
 
-            if (assos.hasAssociation() || !isImmobile) {
+            if (!assos.isSilent() || !isImmobile) {
                 playStep(assos, State.STAND);
             }
         }
@@ -313,7 +313,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             entity.getZ()
         ), Solver.MESSY_FOLIAGE_STRATEGY);
 
-        if (!assos.isNull()) {
+        if (!assos.isSilent()) {
             if (!isMessyFoliage) {
                 isMessyFoliage = true;
                 playStep(assos, State.WALK);
@@ -343,7 +343,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     protected void playSinglefoot(double verticalOffsetAsMinus, State eventType, boolean foot) {
         Association assos = associations.findAssociation(verticalOffsetAsMinus, isRightFoot);
 
-        if (assos.isNotEmitter()) {
+        if (assos.isSilent()) {
             assos = associations.findAssociation(verticalOffsetAsMinus + 1, isRightFoot);
         }
 

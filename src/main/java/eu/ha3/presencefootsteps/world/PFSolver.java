@@ -132,7 +132,7 @@ public class PFSolver implements Solver {
             for (BlockPos underfootPos : BlockPos.iterateOutwards(footPos, (int)feetDistanceToCenter, 2, (int)feetDistanceToCenter)) {
                 mutableFootPos.set(underfootPos);
                 Association assos = findAssociation(associations, ply, collider, underfootPos, mutableFootPos);
-                if (assos.hasAssociation()) {
+                if (!assos.isSilent()) {
                     associationCache.put(footPos.asLong(), assos);
                     return assos;
                 }
@@ -216,6 +216,7 @@ public class PFSolver implements Solver {
         boolean isValidCarpet = !shape.isEmpty() && (shape.getMax(Axis.Y) < 0.2F && shape.getMax(Axis.Y) < collider.getMin(Axis.Y) + 0.1F);
         String association = Emitter.UNASSIGNED;
         String foliage = Emitter.UNASSIGNED;
+        String wetAssociation = Emitter.UNASSIGNED;
 
         if (isValidCarpet && Emitter.isEmitter(association = associations.get(pos, carpet, Substrates.CARPET))) {
             LOGGER.debug("Carpet detected: " + association);
@@ -256,11 +257,9 @@ public class PFSolver implements Solver {
         }
 
         // Check collision against small blocks
-        if (!checkCollision(entity.getWorld(), target, pos, collider)) {
+        if (Emitter.isResult(association) && !checkCollision(entity.getWorld(), target, pos, collider)) {
             association = Emitter.NOT_EMITTER;
         }
-
-        String wetAssociation = Emitter.NOT_EMITTER;
 
         if (Emitter.isEmitter(association) && (hasRain
                 || (!associations.wasLastMatchGolem() && (

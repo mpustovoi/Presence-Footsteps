@@ -2,6 +2,8 @@ package eu.ha3.presencefootsteps.world;
 
 import java.util.Objects;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
@@ -11,7 +13,7 @@ import net.minecraft.util.math.BlockPos;
 public record Association (
         BlockState state,
         BlockPos pos,
-        LivingEntity source,
+        @Nullable LivingEntity source,
 
         String acousticNames,
         String wetAcousticNames,
@@ -23,23 +25,33 @@ public record Association (
         if (Emitter.isResult(dry) || Emitter.isResult(wet) || Emitter.isResult(foliage)) {
             return new Association(state, pos.toImmutable(), source, dry, wet, foliage);
         }
-        return NOT_EMITTER;
+        return new Association(state, pos.toImmutable(), source, Emitter.UNASSIGNED, Emitter.UNASSIGNED, Emitter.UNASSIGNED);
     }
 
     public boolean isNull() {
-        return this == NOT_EMITTER;
+        return !Emitter.isResult(acousticNames)
+            && !Emitter.isResult(wetAcousticNames)
+            && !Emitter.isResult(foliageAcousticNames);
     }
 
-    public boolean isNotEmitter() {
-        return isNull() || (
-               Emitter.isNonEmitter(acousticNames)
-            && Emitter.isNonEmitter(wetAcousticNames)
-            && Emitter.isNonEmitter(foliageAcousticNames)
+    public boolean hasCoreSound() {
+        return Emitter.isResult(acousticNames);
+    }
+
+    public boolean hasWetSound() {
+        return Emitter.isEmitter(wetAcousticNames);
+    }
+
+    public boolean hasFoliageSound() {
+        return Emitter.isEmitter(foliageAcousticNames);
+    }
+
+    public boolean isSilent() {
+        return this == NOT_EMITTER || (
+               Emitter.isNotEmitter(acousticNames)
+            && Emitter.isNotEmitter(wetAcousticNames)
+            && Emitter.isNotEmitter(foliageAcousticNames)
         );
-    }
-
-    public boolean hasAssociation() {
-        return !isNotEmitter();
     }
 
     public BlockSoundGroup soundGroup() {
@@ -47,6 +59,6 @@ public record Association (
     }
 
     public boolean dataEquals(Association other) {
-        return hasAssociation() && Objects.equals(acousticNames, other.acousticNames);
+        return Objects.equals(acousticNames, other.acousticNames);
     }
 }

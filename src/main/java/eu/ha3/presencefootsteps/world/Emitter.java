@@ -5,7 +5,7 @@ public interface Emitter {
     String NOT_EMITTER = "NOT_EMITTER";
     String MESSY_GROUND = "MESSY_GROUND";
 
-    static boolean isNonEmitter(String association) {
+    static boolean isNotEmitter(String association) {
         return NOT_EMITTER.equals(association);
     }
 
@@ -14,13 +14,6 @@ public interface Emitter {
     }
 
     static boolean isEmitter(String association) {
-        return isResult(association) && !isNonEmitter(association);
-    }
-
-    static String combine(String a, String b) {
-        if (isEmitter(b)) {
-            return a + "," + b;
-        }
-        return a;
+        return isResult(association) && !isNotEmitter(association);
     }
 }
