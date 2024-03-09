@@ -18,12 +18,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class PFSolver implements Solver {
-    private static final Logger LOGGER = LogManager.getLogger("PFSolver");
-
     private static final double TRAP_DOOR_OFFSET = 0.1;
 
     private final SoundEngine engine;
@@ -217,7 +213,6 @@ public class PFSolver implements Solver {
         SoundsKey wetAssociation = SoundsKey.UNASSIGNED;
 
         if (isValidCarpet && (association = associations.get(pos, carpet, Substrates.CARPET)).isEmitter()) {
-            LOGGER.debug("Carpet detected: " + association);
             target = carpet;
             // reference frame moved up by 1
         } else {
