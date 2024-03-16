@@ -23,7 +23,7 @@ public class PFConfig extends JsonFile {
 
     private int maxSteppingEntities = 50;
 
-    private boolean disabled;
+    private boolean disabled = false;
     private boolean firstRun = true;
     private boolean multiplayer = true;
     private boolean global = true;
@@ -47,7 +47,7 @@ public class PFConfig extends JsonFile {
     }
 
     public EntitySelector cycleTargetSelector() {
-        targetEntities = EntitySelector.VALUES[(targetEntities.ordinal() + 1) % EntitySelector.VALUES.length];
+        targetEntities = EntitySelector.VALUES[(getEntitySelector().ordinal() + 1) % EntitySelector.VALUES.length];
 
         save();
 
@@ -75,11 +75,11 @@ public class PFConfig extends JsonFile {
     }
 
     public Locomotion getLocomotion() {
-        return stance;
+        return stance == null ? Locomotion.NONE : stance;
     }
 
     public EntitySelector getEntitySelector() {
-        return targetEntities;
+        return targetEntities == null ? EntitySelector.ALL : targetEntities;
     }
 
     public boolean getEnabledFootwear() {
@@ -154,8 +154,10 @@ public class PFConfig extends JsonFile {
     }
 
     public void populateCrashReport(CrashReportSection section) {
-        section.add("PF Global Volume", volume);
-        section.add("PF User's Selected Stance", stance);
+        section.add("Disabled", getDisabled());
+        section.add("Global Volume", volume);
+        section.add("User's Selected Stance", getLocomotion());
+        section.add("Target Selector", getEntitySelector());
         section.add("Enabled Global", global);
         section.add("Enabled Multiplayer", multiplayer);
     }

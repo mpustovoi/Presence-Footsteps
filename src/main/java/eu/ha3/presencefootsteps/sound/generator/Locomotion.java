@@ -1,5 +1,6 @@
 package eu.ha3.presencefootsteps.sound.generator;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -30,7 +31,7 @@ public enum Locomotion {
     private final BiFunction<LivingEntity, SoundEngine, Optional<StepSoundGenerator>> constructor;
 
     private static final String AUTO_TRANSLATION_KEY = "menu.pf.stance.auto";
-    private final String translationKey = "menu.pf.stance." + name().toLowerCase();
+    private final String translationKey = "menu.pf.stance." + name().toLowerCase(Locale.ROOT);
 
     Locomotion() {
         constructor = (entity, engine) -> Optional.empty();

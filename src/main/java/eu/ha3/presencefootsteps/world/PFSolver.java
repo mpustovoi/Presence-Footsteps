@@ -206,8 +206,8 @@ public class PFSolver implements Solver {
         pos.move(Direction.UP);
         final boolean hasRain = entity.getWorld().hasRain(pos);
         BlockState carpet = getBlockStateAt(entity, pos);
-        VoxelShape shape = carpet.getCollisionShape(entity.getWorld(), pos);
-        boolean isValidCarpet = !shape.isEmpty() && (shape.getMax(Axis.Y) < 0.2F && shape.getMax(Axis.Y) < collider.getMin(Axis.Y) + 0.1F);
+        VoxelShape shape = carpet.getOutlineShape(entity.getWorld(), pos);
+        boolean isValidCarpet = !shape.isEmpty() && shape.getMax(Axis.Y) < 0.3F;
         SoundsKey association = SoundsKey.UNASSIGNED;
         SoundsKey foliage = SoundsKey.UNASSIGNED;
         SoundsKey wetAssociation = SoundsKey.UNASSIGNED;
