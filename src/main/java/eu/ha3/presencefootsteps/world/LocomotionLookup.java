@@ -56,7 +56,7 @@ public class LocomotionLookup implements Index<Entity, Locomotion> {
             Identifier id = EntityType.getId(type);
             if (full || !contains(id)) {
                 if (type.create(MinecraftClient.getInstance().world) instanceof LivingEntity) {
-                    writer.field(id.toString(), values.get(id).name());
+                    writer.field(id.toString(), values.getOrDefault(id, Locomotion.NONE).name());
                 }
             }
         });
