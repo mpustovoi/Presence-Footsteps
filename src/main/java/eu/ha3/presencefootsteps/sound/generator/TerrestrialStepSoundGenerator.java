@@ -3,6 +3,7 @@ package eu.ha3.presencefootsteps.sound.generator;
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.util.math.BlockPos;
@@ -80,7 +81,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         if (isImmobile && (entity.isOnGround() || !entity.isSubmergedInWater()) && playbackImmobile()) {
             Association assos = associations.findAssociation(0d, isRightFoot);
 
-            if (!assos.isSilent() || !isImmobile) {
+            if (assos.isResult() && (!assos.isSilent() || !isImmobile)) {
                 playStep(assos, State.STAND);
             }
         }
@@ -177,7 +178,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             }
 
             // Fix high speed footsteps (i.e. horse riding)
-            if (motionTracker.getHorizontalSpeed() > 0.1) {
+            if ((entity instanceof AbstractHorseEntity) && motionTracker.getHorizontalSpeed() > 0.1) {
                 distance *= 3;
             }
 

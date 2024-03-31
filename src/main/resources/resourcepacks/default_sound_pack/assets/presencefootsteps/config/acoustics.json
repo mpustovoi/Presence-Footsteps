@@ -1829,7 +1829,7 @@
         },
         "souls": {
             "type": "events",
-            "wander": "@minecraft:block.soul_soil.place",
+            "wander": "@minecraft:block.soul_soil.step",
             "land": "@minecraft:block.soul_soil.place",
             "walk": "@minecraft:block.soul_soil.place",
             "run": "@minecraft:block.soul_soil.place"
