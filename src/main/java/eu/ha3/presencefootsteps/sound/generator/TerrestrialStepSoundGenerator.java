@@ -80,7 +80,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         if (isImmobile && (entity.isOnGround() || !entity.isSubmergedInWater()) && playbackImmobile()) {
             Association assos = associations.findAssociation(0d, isRightFoot);
 
-            if (!assos.isSilent() || !isImmobile) {
+            if (assos.isResult() && (!assos.isSilent() || !isImmobile)) {
                 playStep(assos, State.STAND);
             }
         }
